@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from app.domain.enums.business_type import BusinessType
 from datetime import datetime
+from typing import Optional
 
 class TenantBase(BaseModel):
   name: str
@@ -17,3 +18,8 @@ class TenantRead(TenantBase):
 
   class Config:
     from_attributes = True
+
+class TenantUpdate(BaseModel):
+  name: Optional[str] = None
+  business_type: Optional[BusinessType] = None
+  active: Optional[bool] = None
