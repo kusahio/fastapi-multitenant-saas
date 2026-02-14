@@ -1,7 +1,7 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase # declarative_base
-from core.settings import settings
+from app.core.settings import settings
 from urllib.parse import quote_plus
 
 DATABASE_URL = os.getenv('DATABASE_URL')
