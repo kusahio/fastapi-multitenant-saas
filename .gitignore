@@ -1,3 +1,10 @@
 venv
 .env
 .vscode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Alembic y Base de Datos
+*.db
+alembic/versions/__pycache__/
