@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.modules.tenants.repository import TenantRepository
-from app.modules.tenants.schemas import TenantCreate, TenantUpdate, TenantRead
+from app.modules.tenants.schemas import TenantCreate, TenantUpdate
 from app.modules.tenants.models import Tenant
 from app.domain.errors.tenant import TenantAlreadyExistsError, TenantNotFoundError
 
