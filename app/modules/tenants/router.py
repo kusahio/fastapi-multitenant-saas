@@ -33,7 +33,7 @@ def list_tenants(
 ):
   return service.get_list(db)
 
-@router.get('/tenant/{tenant_id}', response_model=TenantRead, status_code=status.HTTP_200_OK)
+@router.get('/{tenant_id}', response_model=TenantRead, status_code=status.HTTP_200_OK)
 def get_tenant_by_id(
   tenant_id: int,
   db: Session = Depends(get_db), 
@@ -47,7 +47,7 @@ def get_tenant_by_id(
       detail='Tenant not found'
     )
 
-@router.get('/tenant/{tenant_slug}', response_model=TenantRead, status_code=status.HTTP_200_OK)
+@router.get('/slug/{tenant_slug}', response_model=TenantRead, status_code=status.HTTP_200_OK)
 def get_tenant_by_slug(
   tenant_slug: str,
   db: Session = Depends(get_db),
@@ -61,7 +61,7 @@ def get_tenant_by_slug(
       detail='Tenant not found'
     )
   
-@router.put('/tenant/{tenant_id}', response_model=TenantRead, status_code=status.HTTP_201_CREATED)
+@router.put('/tenant/{tenant_id}', response_model=TenantRead, status_code=status.HTTP_200_OK)
 def update_tenant(
   tenant_id: int,
   data: TenantUpdate,
@@ -72,11 +72,11 @@ def update_tenant(
     return service.update(db, tenant_id, data)
   except TenantNotFoundError:
     raise HTTPException(
-      status.HTTP_404_NOT_FOUND,
+      status_code=status.HTTP_404_NOT_FOUND,
       detail='Tenant not found'
     )
 
-@router.patch('tenant/{tenant_id}/activate', response_model=TenantRead, status_code=status.HTTP_200_OK)
+@router.patch('/{tenant_id}/activate', response_model=TenantRead, status_code=status.HTTP_200_OK)
 def activate_tenant(
   tenant_id: int,
   db: Session = Depends(get_db),
@@ -90,7 +90,7 @@ def activate_tenant(
       detail='Tenant not found'
     )
 
-@router.patch('tenant/{tenant_id}/deactivate', response_model=TenantRead, status_code=status.HTTP_200_OK)
+@router.patch('/{tenant_id}/deactivate', response_model=TenantRead, status_code=status.HTTP_200_OK)
 def deactivate_tenant(
   tenant_id: int,
   db: Session = Depends(get_db),

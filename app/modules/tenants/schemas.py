@@ -1,12 +1,23 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from app.domain.enums.business_type import BusinessType
 from datetime import datetime
 from typing import Optional
 
 class TenantBase(BaseModel):
   name: str
-  slug: str
+  slug: str = Field(
+    ...,
+    min_length=3,
+    max_length=50,
+    pattern=r'^[a-z0-9]+(-[a-z0-9]+)*$'
+  )
   business_type: BusinessType
+
+  @field_validator('slug')
+  @classmethod
+  def normalize_slug(cls, value: str) -> str:
+    value = value.lower().strip()
+    return value
 
 class TenantCreate(TenantBase):
   pass

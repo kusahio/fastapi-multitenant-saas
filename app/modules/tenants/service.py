@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.modules.tenants.repository import TenantRepository
 from app.modules.tenants.schemas import TenantCreate, TenantUpdate
 from app.modules.tenants.models import Tenant
@@ -9,14 +10,16 @@ class TenantService:
         self.tenant_repository = tenant_repository
     
     def create(self, db: Session, data: TenantCreate) -> Tenant:
-      existing = self.tenant_repository.get_by_slug(db, data.slug)
 
-      if existing:
-        raise TenantAlreadyExistsError()
+      tenant_data = data.model_dump()
+      tenant_data['active'] = True
+      tenant = Tenant(**tenant_data)
+      try:
+        return self.tenant_repository.save(db, tenant)
       
-      tenant = Tenant(**data.model_dump(), active=True)
-
-      return self.tenant_repository.save(db, tenant)
+      except IntegrityError:
+        db.rollback()
+        raise TenantAlreadyExistsError()
     
     def get_by_id(self, db: Session, tenant_id: int) -> Tenant:
       tenant = self.tenant_repository.get_by_id(db, tenant_id)
