@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, EmailStr
 from app.domain.enums.business_type import BusinessType
 from datetime import datetime
 from typing import Optional
@@ -20,7 +20,8 @@ class TenantBase(BaseModel):
     return value
 
 class TenantCreate(TenantBase):
-  pass
+  owner_email: EmailStr
+  owner_password: str
 
 class TenantRead(TenantBase):
   id: int

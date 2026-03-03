@@ -1,5 +1,4 @@
 from sqlalchemy import Column, String, Boolean, Integer, Enum as SQLEnum, DateTime, func
-# from sqlalchemy.orm import relationship
 from app.core.database import Base
 from app.domain.enums.business_type import BusinessType
 

@@ -5,8 +5,7 @@ class TenantRepository:
   def save(self, db: Session, tenant: Tenant) -> Tenant:
 
     db.add(tenant)
-    db.commit()
-    db.refresh(tenant)
+    db.flush()
 
     return tenant
   
@@ -23,7 +22,6 @@ class TenantRepository:
     for field, value in data.items():
       setattr(tenant, field, value)
     
-    db.commit()
-    db.refresh(tenant)
+    db.flush()
 
     return tenant

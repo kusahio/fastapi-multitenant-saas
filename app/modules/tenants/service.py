@@ -3,7 +3,9 @@ from sqlalchemy.exc import IntegrityError
 from app.modules.tenants.repository import TenantRepository
 from app.modules.tenants.schemas import TenantCreate, TenantUpdate
 from app.modules.tenants.models import Tenant
+from app.modules.users.models import User
 from app.domain.errors.tenant import TenantAlreadyExistsError, TenantNotFoundError
+from app.core.security import hashed_password
 
 class TenantService:
     def __init__(self, tenant_repository: TenantRepository):
@@ -11,11 +13,17 @@ class TenantService:
     
     def create(self, db: Session, data: TenantCreate) -> Tenant:
 
-      tenant_data = data.model_dump()
+      tenant_data = data.model_dump(exclude={'owner_email','owner_password'})
       tenant_data['active'] = True
       tenant = Tenant(**tenant_data)
       try:
-        return self.tenant_repository.save(db, tenant)
+        self.tenant_repository.save(db, tenant)
+
+        owner = User(
+          email = data.owner_email.lower().strip(),
+          hashed_password = hashed_password()
+        )
+        return tenant
       
       except IntegrityError:
         db.rollback()

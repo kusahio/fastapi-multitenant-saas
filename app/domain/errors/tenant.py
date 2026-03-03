@@ -3,3 +3,6 @@ class TenantAlreadyExistsError(Exception):
 
 class TenantNotFoundError(Exception):
     pass
+
+class TenantInactiveError(Exception):
+    pass
