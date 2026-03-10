@@ -6,7 +6,7 @@ from app.modules.users.schemas import UserCreate, UserUpdate
 from app.modules.users.models import User
 from app.domain.enums.users_role import UserRole
 from app.domain.errors.tenant import TenantInactiveError
-from app.domain.errors.users import UserAlreadyExistError, UserNotFoundError, InvalidCredentialsError, UserInactiveError
+from app.domain.errors.users import UserAlreadyExistError, UserNotFoundError
 from app.core.security import hashed_password, verify_password
 
 class UserService:

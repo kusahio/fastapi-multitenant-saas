@@ -4,6 +4,7 @@ from app.modules.tenants.repository import TenantRepository
 from app.modules.tenants.schemas import TenantCreate, TenantUpdate
 from app.modules.tenants.models import Tenant
 from app.modules.users.models import User
+from app.domain.enums.users_role import UserRole
 from app.domain.errors.tenant import TenantAlreadyExistsError, TenantNotFoundError
 from app.core.security import hashed_password
 
@@ -20,8 +21,11 @@ class TenantService:
         self.tenant_repository.save(db, tenant)
 
         owner = User(
-          email = data.owner_email.lower().strip(),
-          hashed_password = hashed_password()
+            email=data.owner_email.lower().strip(),
+            hashed_password=hashed_password(data.owner_password),
+            tenant_id=tenant.id,
+            role=UserRole.OWNER,
+            active=True
         )
         return tenant
       
