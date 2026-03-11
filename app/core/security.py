@@ -2,7 +2,8 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(
     schemes=['bcrypt'],
-    deprecated='auto'
+    deprecated='auto',
+    bcrypt__rounds=12
 )
 
 def hashed_password(password: str) -> str:

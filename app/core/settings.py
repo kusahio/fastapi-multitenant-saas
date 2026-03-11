@@ -13,8 +13,8 @@ class Settings(BaseSettings):
         env_file_encoding='utf-8'
     )
 
-    jwt_secret = str = None
-    jwt_algorithm = str = None
+    jwt_secret: Optional[str] = None
+    jwt_algorithm: Optional[str] = None
 
 
 settings = Settings()

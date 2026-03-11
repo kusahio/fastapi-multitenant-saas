@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from app.modules.users.repository import UserRepository
+from app.modules.user_tenants.repository import UserTenantRepository
 from app.modules.tenants.repository import TenantRepository
 from app.modules.tenants.schemas import TenantCreate, TenantUpdate
 from app.modules.tenants.models import Tenant
@@ -10,8 +12,15 @@ from app.domain.errors.tenant import TenantAlreadyExistsError, TenantNotFoundErr
 from app.core.security import hashed_password
 
 class TenantService:
-    def __init__(self, tenant_repository: TenantRepository):
+    def __init__(
+            self,
+            tenant_repository: TenantRepository,
+            user_repository: UserRepository,
+            user_tenant_repository: UserTenantRepository
+        ):
         self.tenant_repository = tenant_repository
+        self.user_repository = user_repository
+        self.user_tenant_repository = user_tenant_repository
     
     def create(self, db: Session, data: TenantCreate):
 

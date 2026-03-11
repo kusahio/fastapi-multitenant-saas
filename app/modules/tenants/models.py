@@ -1,6 +1,7 @@
-from sqlalchemy import Column, String, Boolean, Integer, DateTime, func
+from sqlalchemy import Column, String, Boolean, Integer, DateTime, func, Enum
 from sqlalchemy.orm import relationship
 from app.core.database import Base
+from app.domain.enums.business_type import BusinessType
 
 class Tenant(Base):
   __tablename__ = 'tenants'
@@ -8,6 +9,7 @@ class Tenant(Base):
   id = Column(Integer, primary_key=True)
   name = Column(String(100), nullable=False)
   slug = Column(String(50), unique=True, nullable=False)
+  business_type = Column(Enum(BusinessType), nullable=False)
   active = Column(Boolean, default=True)
 
   created_at = Column(
@@ -15,4 +17,4 @@ class Tenant(Base):
     server_default=func.now()
   )
 
-  user = relationship("UserTenant", back_populates="tenant", cascade="all, delete-orphan")
+  users = relationship("UserTenant", back_populates="tenant", cascade="all, delete-orphan")
