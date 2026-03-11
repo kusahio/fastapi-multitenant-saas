@@ -1,12 +1,8 @@
 from fastapi import FastAPI
-
 from app.core.middleware.tenant_middleware import TenantMiddleware
-
-# routers
 from app.modules.auth.router import router as auth_router
 from app.modules.users.router import router as users_router
 from app.modules.tenants.router import router as tenants_router
-
 
 def create_app() -> FastAPI:
 

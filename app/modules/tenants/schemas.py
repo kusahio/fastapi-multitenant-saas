@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator, EmailStr
+from pydantic import BaseModel, Field, field_validator, EmailStr, ConfigDict
 from app.domain.enums.business_type import BusinessType
 from datetime import datetime
 from typing import Optional
@@ -29,8 +29,7 @@ class TenantRead(TenantBase):
     active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TenantUpdate(BaseModel):
     name: Optional[str] = None

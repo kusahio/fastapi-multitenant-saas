@@ -1,21 +1,15 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-
 from app.modules.users.repository import UserRepository
 from app.modules.user_tenants.repository import UserTenantRepository
-
 from app.modules.users.schemas import UserCreate, UserUpdate
 from app.modules.users.models import User
 from app.modules.user_tenants.models import UserTenant
-
 from app.domain.enums.users_role import UserRole
 from app.domain.errors.users import UserAlreadyExistError, UserNotFoundError, InsufficientPermissionsError
-
 from app.core.security import hashed_password
 
-
 class UserService:
-
     def __init__(
         self,
         user_repository: UserRepository,
@@ -24,13 +18,7 @@ class UserService:
         self.user_repository = user_repository
         self.user_tenant_repository = user_tenant_repository
 
-
-    # -------------------------
-    # ROLE VALIDATIONS
-    # -------------------------
-
     def _validate_role_creation(self, current_user, new_role: UserRole):
-
         role = current_user["role"]
 
         if role == UserRole.PLATFORM_ADMIN:
@@ -49,7 +37,6 @@ class UserService:
         raise InsufficientPermissionsError()
     
     def _validate_user_management_permissions(self, current_user, target_role):
-
         role = current_user["role"]
 
         if role == UserRole.PLATFORM_ADMIN:
@@ -66,21 +53,13 @@ class UserService:
             raise InsufficientPermissionsError()
 
         raise InsufficientPermissionsError()
-    
-    # -------------------------
-    # CREATE USER
-    # -------------------------
 
     def create_user(self, db: Session, data: UserCreate, current_user):
-
         tenant_id = current_user["tenant_id"]
-
         normalized_email = data.email.lower().strip()
-
         self._validate_role_creation(current_user, data.role)
 
         try:
-
             user = User(
                 name=data.name,
                 email=normalized_email,
@@ -110,13 +89,7 @@ class UserService:
             db.rollback()
             raise UserAlreadyExistError()
 
-
-    # -------------------------
-    # LIST USERS
-    # -------------------------
-
     def list_users(self, db: Session, current_user):
-
         tenant_id = current_user["tenant_id"]
 
         user_tenants = self.user_tenant_repository.get_by_tenant_id(
@@ -126,13 +99,7 @@ class UserService:
 
         return [ut.user for ut in user_tenants]
 
-
-    # -------------------------
-    # UPDATE USER
-    # -------------------------
-
     def update_user(self, db: Session, user_id: int, data: UserUpdate, current_user):
-
         tenant_id = current_user["tenant_id"]
 
         user_tenant = self.user_tenant_repository.get_user_tenant(
@@ -158,7 +125,6 @@ class UserService:
             )
 
         try:
-
             self.user_repository.update(
                 db,
                 user,
@@ -175,13 +141,7 @@ class UserService:
             db.rollback()
             raise ValueError("Update failed")
 
-
-    # -------------------------
-    # DEACTIVATE USER
-    # -------------------------
-
     def deactivate_user(self, db: Session, user_id: int, current_user):
-
         tenant_id = current_user["tenant_id"]
 
         user_tenant = self.user_tenant_repository.get_user_tenant(
@@ -199,7 +159,6 @@ class UserService:
         )
 
         try:
-
             user_tenant.user.active = False
 
             db.commit()
@@ -211,13 +170,7 @@ class UserService:
             db.rollback()
             raise
 
-
-    # -------------------------
-    # ACTIVATE USER
-    # -------------------------
-
     def activate_user(self, db: Session, user_id: int, current_user):
-
         tenant_id = current_user["tenant_id"]
 
         user_tenant = self.user_tenant_repository.get_user_tenant(
@@ -235,7 +188,6 @@ class UserService:
         )
 
         try:
-
             user_tenant.user.active = True
 
             db.commit()
