@@ -1,2 +1,2 @@
-class InvalidCredentials(Exception):
+class InvalidCredentialsError(Exception):
   pass
