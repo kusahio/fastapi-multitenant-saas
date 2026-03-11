@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -8,6 +8,7 @@ from app.modules.users.schemas import UserCreate, UserRead, UserUpdate
 from app.modules.users.service import UserService
 from app.modules.users.repository import UserRepository
 from app.modules.user_tenants.repository import UserTenantRepository
+from app.domain.errors.users import UserAlreadyExistError
 
 router = APIRouter(
     prefix="/users",
@@ -19,13 +20,19 @@ user_service = UserService(
     UserTenantRepository()
 )
 
-@router.post("/", response_model=UserRead, dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN, UserRole.OWNER, UserRole.ADMIN))])
+@router.post("/", response_model=UserRead, status_code=status.HTTP_201_CREATED, dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN, UserRole.OWNER, UserRole.ADMIN))])
 def create_user(
     data: UserCreate,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return user_service.create_user(db, data, current_user)
+    try:
+        return user_service.create_user(db, data, current_user)
+    except UserAlreadyExistError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this email already exists"
+        )
 
 @router.get("/", response_model=list[UserRead], dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN, UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))])
 def list_users(
