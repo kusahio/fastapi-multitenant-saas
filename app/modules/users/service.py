@@ -9,7 +9,7 @@ from app.modules.users.models import User
 from app.modules.user_tenants.models import UserTenant
 
 from app.domain.enums.users_role import UserRole
-from app.domain.errors.users import UserAlreadyExistError, UserNotFoundError
+from app.domain.errors.users import UserAlreadyExistError, UserNotFoundError, InsufficientPermissionsError
 
 from app.core.security import hashed_password
 
@@ -39,16 +39,15 @@ class UserService:
         if role == UserRole.OWNER:
             if new_role in (UserRole.ADMIN, UserRole.STAFF):
                 return
-            raise PermissionError("Invalid role assignment")
+            raise InsufficientPermissionsError()
 
         if role == UserRole.ADMIN:
             if new_role == UserRole.STAFF:
                 return
-            raise PermissionError("Invalid role assignment")
+            raise InsufficientPermissionsError()
 
-        raise PermissionError("Insufficient permissions")
-
-
+        raise InsufficientPermissionsError()
+    
     def _validate_user_management_permissions(self, current_user, target_role):
 
         role = current_user["role"]
@@ -59,16 +58,15 @@ class UserService:
         if role == UserRole.OWNER:
             if target_role in (UserRole.ADMIN, UserRole.STAFF):
                 return
-            raise PermissionError("Invalid operation")
+            raise InsufficientPermissionsError()
 
         if role == UserRole.ADMIN:
             if target_role == UserRole.STAFF:
                 return
-            raise PermissionError("Invalid operation")
+            raise InsufficientPermissionsError()
 
-        raise PermissionError("Insufficient permissions")
-
-
+        raise InsufficientPermissionsError()
+    
     # -------------------------
     # CREATE USER
     # -------------------------

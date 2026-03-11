@@ -4,6 +4,7 @@ from app.modules.user_tenants.repository import UserTenantRepository
 from app.core.security import verify_password
 from app.domain.errors.users import InvalidCredentialsError
 from app.modules.auth.utils import create_access_token
+from app.domain.enums.users_role import UserRole
 
 class AuthService:
     def __init__(self):
@@ -18,6 +19,13 @@ class AuthService:
 
         if not verify_password(password, user.hashed_password):
             raise InvalidCredentialsError()
+
+        if user.is_platform_admin:
+            token = create_access_token({
+                "sub": str(user.id),
+                "role": UserRole.PLATFORM_ADMIN.value,
+            })
+            return {"access_token": token}
 
         user_tenants = self.user_tenant_repository.get_by_user_id(
             db,
@@ -34,7 +42,7 @@ class AuthService:
             })
 
         token = create_access_token({
-            "sub": user.id
+            "sub": str(user.id)
         })
 
         return {

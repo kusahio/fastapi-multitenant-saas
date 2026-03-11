@@ -1,11 +1,21 @@
+from fastapi import HTTPException, status
+
+
 class UserAlreadyExistError(Exception):
-  pass
+    pass
 
 class UserNotFoundError(Exception):
-  pass
+    pass
 
 class InvalidCredentialsError(Exception):
-  pass
+    pass
 
 class UserInactiveError(Exception):
-  pass
+    pass
+
+class InsufficientPermissionsError(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Insufficient permissions'
+        )

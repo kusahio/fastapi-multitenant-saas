@@ -24,40 +24,41 @@ class TenantService:
     
     def create(self, db: Session, data: TenantCreate):
 
-      tenant_data = data.model_dump(
-          exclude={"owner_email", "owner_password"}
-      )
+        tenant_data = data.model_dump(
+            exclude={"owner_name", "owner_email", "owner_password"}
+        )
 
-      tenant_data["active"] = True
+        tenant_data["active"] = True
 
-      tenant = Tenant(**tenant_data)
+        tenant = Tenant(**tenant_data)
 
-      try:
-          self.tenant_repository.save(db, tenant)
+        try:
+            self.tenant_repository.save(db, tenant)
 
-          owner = User(
-              email=data.owner_email.lower().strip(),
-              hashed_password=hashed_password(data.owner_password),
-              active=True
-          )
+            owner = User(
+                name=data.owner_name,
+                email=data.owner_email.lower().strip(),
+                hashed_password=hashed_password(data.owner_password),
+                active=True
+            )
 
-          self.user_repository.save(db, owner)
+            self.user_repository.save(db, owner)
 
-          user_tenant = UserTenant(
-              user_id=owner.id,
-              tenant_id=tenant.id,
-              role=UserRole.OWNER
-          )
+            user_tenant = UserTenant(
+                user_id=owner.id,
+                tenant_id=tenant.id,
+                role=UserRole.OWNER
+            )
 
-          self.user_tenant_repository.save(db, user_tenant)
+            self.user_tenant_repository.save(db, user_tenant)
 
-          db.commit()
+            db.commit()
 
-          return tenant
+            return tenant
 
-      except IntegrityError:
-          db.rollback()
-          raise TenantAlreadyExistsError()
+        except IntegrityError:
+            db.rollback()
+            raise TenantAlreadyExistsError()
     
     def get_by_id(self, db: Session, tenant_id: int) -> Tenant:
       tenant = self.tenant_repository.get_by_id(db, tenant_id)
