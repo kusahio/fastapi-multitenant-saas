@@ -8,7 +8,7 @@ class RoleGuard:
 
     def __call__(self, current_user=Depends(get_current_user)):
 
-        user_role = current_user["role"]
+        user_role = current_user.get("role")
 
         if user_role not in self.allowed_roles:
             raise HTTPException(

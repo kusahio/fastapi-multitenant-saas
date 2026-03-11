@@ -14,12 +14,21 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
-            payload = decode_token(token)
+
+            try:
+                payload = decode_token(token)
+                
+            except Exception:
+                payload = None
 
             if payload:
-                request.state.user_id = payload.get("sub")
+                request.state.user_id = payload.get("user_id")
                 request.state.tenant_id = payload.get("tenant_id")
                 request.state.role = payload.get("role")
+            else:
+                request.state.user_id = None
+                request.state.tenant_id = None
+                request.state.role = None
 
         response = await call_next(request)
 

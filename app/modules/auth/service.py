@@ -17,6 +17,9 @@ class AuthService:
         if not user:
             raise InvalidCredentialsError()
 
+        if not user.active:
+            raise InvalidCredentialsError()
+
         if not verify_password(password, user.hashed_password):
             raise InvalidCredentialsError()
 

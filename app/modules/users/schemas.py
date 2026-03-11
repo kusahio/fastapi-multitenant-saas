@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from app.domain.enums.users_role import UserRole
 from datetime import datetime
 from typing import Optional
@@ -16,8 +16,7 @@ class UserRead(UserBase):
     active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class UserUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=3, max_length=50)
