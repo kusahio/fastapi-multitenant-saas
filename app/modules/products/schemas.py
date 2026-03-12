@@ -5,6 +5,7 @@ from app.domain.enums.unit_type import UnitType
 
 class ProductBase(BaseModel):
     name: str = Field(..., min_length=2, max_length=100)
+    barcode: Optional[str] = None
     description: Optional[str] = None
     price: Decimal = Field(..., gt=0)
     discount: Optional[Decimal] = Field(None, ge=0)
@@ -18,6 +19,7 @@ class ProductCreate(ProductBase):
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=100)
+    barcode: Optional[str] = None
     description: Optional[str] = None
     price: Optional[Decimal] = Field(None, gt=0)
     discount: Decimal = Field(default=0, ge=0)

@@ -6,6 +6,8 @@ from app.modules.tenants.router import router as tenants_router
 from app.modules.categories.router import router as categories_router
 from app.modules.products.router import router as products_router
 from app.modules.metrics.router import router as metrics_router
+from app.modules.orders.router import router as orders_router
+from app.modules.cash_shifts.router import router as cash_shifts_router
 
 def create_app() -> FastAPI:
 
@@ -22,6 +24,8 @@ def create_app() -> FastAPI:
     app.include_router(categories_router)
     app.include_router(products_router)
     app.include_router(metrics_router)
+    app.include_router(orders_router)
+    app.include_router(cash_shifts_router)
 
     @app.get("/health")
     def health():

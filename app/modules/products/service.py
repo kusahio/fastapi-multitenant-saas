@@ -50,3 +50,12 @@ class ProductService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
         db.commit()
         return deleted_product
+    
+    def find_for_pos(self, db: Session, tenant_id: int, query: str):
+        results = self.repository.search_by_term(db, tenant_id, query)
+
+        for product in results:
+            if product.barcode == query:
+                return [product]
+                
+        return results
