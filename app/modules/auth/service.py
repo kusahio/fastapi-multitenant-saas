@@ -28,7 +28,11 @@ class AuthService:
                 "sub": str(user.id),
                 "role": UserRole.PLATFORM_ADMIN.value,
             })
-            return {"access_token": token}
+            return {
+                "user_id": user.id,
+                "tenants": [],
+                "access_token": token
+            }
 
         user_tenants = self.user_tenant_repository.get_by_user_id(
             db,
