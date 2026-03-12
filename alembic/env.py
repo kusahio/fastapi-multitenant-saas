@@ -16,6 +16,7 @@ from app.modules.tenants.models import Tenant
 from app.modules.user_tenants.models import UserTenant
 from app.modules.categories.models import Category
 from app.modules.products.models import Product
+from app.modules.orders.models import Order
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
