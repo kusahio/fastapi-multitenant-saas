@@ -10,19 +10,35 @@ from app.modules.categories.service import CategoryService
 router = APIRouter(prefix="/categories", tags=["Categories"])
 category_service = CategoryService()
 
-@router.post("/", response_model=CategoryRead, status_code=status.HTTP_201_CREATED, dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN))])
+@router.post(
+    "/", 
+    response_model=CategoryRead, 
+    status_code=status.HTTP_201_CREATED, dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN))]
+)
 def create_category(data: CategoryCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return category_service.create(db, data, current_user["tenant_id"])
 
-@router.get("/", response_model=list[CategoryRead], dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))])
+@router.get(
+    "/", 
+    response_model=list[CategoryRead], 
+    dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))]
+)
 def list_categories(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return category_service.get_list(db, current_user["tenant_id"])
 
-@router.patch("/{category_id}", response_model=CategoryRead, dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN))])
+@router.patch(
+    "/{category_id}", 
+    response_model=CategoryRead, 
+    dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN))]
+)
 def update_category(category_id: int, data: CategoryUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return category_service.update(db, category_id, data, current_user["tenant_id"])
 
-@router.delete("/{category_id}", response_model=CategoryRead, dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN))])
+@router.delete(
+    "/{category_id}", 
+    response_model=CategoryRead, 
+    dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN))]
+)
 def delete_category(
     category_id: int, 
     db: Session = Depends(get_db), 

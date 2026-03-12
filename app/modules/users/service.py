@@ -85,7 +85,6 @@ class UserService:
             return user
 
         except IntegrityError:
-
             db.rollback()
             raise UserAlreadyExistError()
 
@@ -97,7 +96,7 @@ class UserService:
             tenant_id
         )
 
-        return [ut.user for ut in user_tenants]
+        return [user_tenant.user for user_tenant in user_tenants]
 
     def update_user(self, db: Session, user_id: int, data: UserUpdate, current_user):
         tenant_id = current_user["tenant_id"]
@@ -137,7 +136,6 @@ class UserService:
             return user
 
         except IntegrityError:
-
             db.rollback()
             raise ValueError("Update failed")
 
@@ -166,7 +164,6 @@ class UserService:
             return user_tenant.user
 
         except Exception:
-
             db.rollback()
             raise
 
@@ -195,6 +192,18 @@ class UserService:
             return user_tenant.user
 
         except Exception:
-
             db.rollback()
             raise
+    
+    def get_user_tenants(self, db: Session, user_id: int):
+        user_tenants = self.user_tenant_repository.get_by_user_id(db, user_id)
+
+        return [
+            {
+                "tenant_id": user_tenant.tenant.id,
+                "tenant_name": user_tenant.tenant.name,
+                "tenant_slug": user_tenant.tenant.slug,
+                "role": user_tenant.role
+            }
+            for user_tenant in user_tenants
+        ]

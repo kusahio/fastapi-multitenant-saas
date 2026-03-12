@@ -23,3 +23,11 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     password: Optional[str] = Field(None, min_length=6)
     role: Optional[UserRole] = None
+
+class UserTenantResponse(BaseModel):
+    tenant_id: int
+    tenant_name: str
+    tenant_slug: str
+    role: UserRole
+
+    model_config = ConfigDict(from_attributes=True)
