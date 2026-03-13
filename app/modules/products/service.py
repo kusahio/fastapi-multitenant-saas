@@ -3,21 +3,24 @@ from fastapi import HTTPException, status
 from app.modules.products.repository import ProductRepository
 from app.modules.products.schemas import ProductCreate, ProductUpdate
 from app.modules.products.models import Product
-from app.modules.categories.service import CategoryService
 
 class ProductService:
     def __init__(self):
         self.repository = ProductRepository()
-        self.category_service = CategoryService()
 
     def create(self, db: Session, data: ProductCreate, tenant_id: int):
-        self.category_service.get_by_id(db, data.category_id, tenant_id)
+        if data.barcode:
+            existing = db.query(Product).filter(
+                Product.tenant_id == tenant_id,
+                Product.barcode == data.barcode
+            ).first()
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Ya existe un producto con este código de barras en tu tienda."
+                )
 
-        product_data = data.model_dump()
-        product_data["tenant_id"] = tenant_id
-        
-        product = Product(**product_data)
-        
+        product = Product(**data.model_dump(), tenant_id=tenant_id)
         self.repository.save(db, product)
         db.commit()
         db.refresh(product)
@@ -29,33 +32,44 @@ class ProductService:
     def get_by_id(self, db: Session, product_id: int, tenant_id: int):
         product = self.repository.get_by_id(db, tenant_id, product_id)
         if not product:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Producto no encontrado")
         return product
 
     def update(self, db: Session, product_id: int, data: ProductUpdate, tenant_id: int):
         product = self.get_by_id(db, product_id, tenant_id)
-        
-        if data.category_id is not None:
-            self.category_service.get_by_id(db, data.category_id, tenant_id)
-
         update_data = data.model_dump(exclude_unset=True)
-        self.repository.update(db, product, update_data)
+
+        if "barcode" in update_data and update_data["barcode"]:
+            existing = db.query(Product).filter(
+                Product.tenant_id == tenant_id,
+                Product.barcode == update_data["barcode"],
+                Product.id != product_id
+            ).first()
+            if existing:
+                raise HTTPException(
+                    status_code=400, detail="El código de barras ya está en uso.")
+
+        for key, value in update_data.items():
+            setattr(product, key, value)
+
         db.commit()
         db.refresh(product)
         return product
-        
+
     def delete(self, db: Session, product_id: int, tenant_id: int):
         deleted_product = self.repository.delete(db, tenant_id, product_id)
         if not deleted_product:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Producto no encontrado")
         db.commit()
         return deleted_product
-    
+
     def find_for_pos(self, db: Session, tenant_id: int, query: str):
         results = self.repository.search_by_term(db, tenant_id, query)
 
         for product in results:
             if product.barcode == query:
                 return [product]
-                
+
         return results
