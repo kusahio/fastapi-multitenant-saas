@@ -10,6 +10,7 @@ class Product(Base):
     barcode = Column(String(50), unique=True, nullable=True, index=True)
     name = Column(String(100), nullable=False)
     description = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
     price = Column(Numeric(10, 2), nullable=False)
     discount = Column(Numeric(10, 2), default=0)
     is_discount_active = Column(Boolean, default=False, nullable=False)

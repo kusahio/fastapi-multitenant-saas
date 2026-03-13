@@ -64,10 +64,30 @@ class MetricsService:
             for row in orders_by_employee_query
         ]
 
+        sales_by_payment_query = db.query(
+            Order.payment_type.label('payment_type'),
+            func.count(Order.id).label('total_orders'),
+            func.sum(Order.total).label('total_amount')
+        ).filter(
+            Order.tenant_id == tenant_id
+        ).group_by(
+            Order.payment_type
+        ).all()
+
+        sales_by_payment_type = [
+            {
+                "payment_type": row.payment_type,
+                "total_orders": row.total_orders,
+                "total_amount": row.total_amount or 0 
+            }
+            for row in sales_by_payment_query
+        ]
+
         return {
             "total_products": total_products,
             "total_categories": total_categories,
             "products_by_category": products_by_category,
-            "total_orders": total_orders,  # <-- NUEVO
-            "orders_by_employee": orders_by_employee  # <-- NUEVO
+            "total_orders": total_orders,
+            "orders_by_employee": orders_by_employee,
+            "sales_by_payment_type": sales_by_payment_type
         }

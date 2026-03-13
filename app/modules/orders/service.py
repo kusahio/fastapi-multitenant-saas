@@ -68,6 +68,7 @@ class OrderService:
         order = Order(
             tenant_id=tenant_id,
             user_id=user_id,
+            payment_type=data.payment_type,
             total=total_order_amount,
             items=order_items
         )

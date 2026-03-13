@@ -6,10 +6,10 @@ from app.core.guards.role_guard import RoleGuard
 from app.domain.enums.users_role import UserRole
 from app.modules.products.schemas import ProductCreate, ProductRead, ProductUpdate
 from app.modules.products.service import ProductService
+from app.domain.enums.unit_type import UnitType
 
 router = APIRouter(prefix="/products", tags=["Products"])
 product_service = ProductService()
-
 
 @router.post(
     "/",
@@ -20,7 +20,6 @@ product_service = ProductService()
 def create_product(data: ProductCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return product_service.create(db, data, current_user["tenant_id"])
 
-
 @router.get(
     "/",
     response_model=list[ProductRead],
@@ -30,7 +29,6 @@ def create_product(data: ProductCreate, db: Session = Depends(get_db), current_u
 def list_products(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return product_service.get_list(db, current_user["tenant_id"])
 
-
 @router.patch(
     "/{product_id}",
     response_model=ProductRead,
@@ -38,7 +36,6 @@ def list_products(db: Session = Depends(get_db), current_user=Depends(get_curren
 )
 def update_product(product_id: int, data: ProductUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return product_service.update(db, product_id, data, current_user["tenant_id"])
-
 
 @router.delete(
     "/{product_id}",
@@ -48,7 +45,6 @@ def update_product(product_id: int, data: ProductUpdate, db: Session = Depends(g
 def delete_product(product_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return product_service.delete(db, product_id, current_user["tenant_id"])
 
-
 @router.get("/search", response_model=list[ProductRead])
 def search_products(
     q: str,
@@ -56,3 +52,15 @@ def search_products(
     current_user=Depends(get_current_user)
 ):
     return product_service.find_for_pos(db, current_user.get("tenant_id"), q)
+
+@router.get(
+    "/unit-types",
+    dependencies=[
+        Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))
+    ]
+)
+def get_unit_types():
+    """
+    Devuelve la lista de tipos de unidades disponibles para los productos.
+    """
+    return [unit.value for unit in UnitType]
