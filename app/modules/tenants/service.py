@@ -25,16 +25,19 @@ class TenantService:
 
     def create(self, db: Session, data: TenantCreate):
         tenant_data = data.model_dump(
-            exclude={"owner_name", "owner_email", "owner_password"}
+            exclude={
+                "owner_name", 
+                "owner_email", 
+                "owner_password", 
+                "owner_document_number"
+            }
         )
 
         tenant_data["active"] = True
-
         tenant = Tenant(**tenant_data)
 
         try:
             self.tenant_repository.save(db, tenant)
-
             normalized_email = data.owner_email.lower().strip()
             owner = self.user_repository.get_by_email(db, normalized_email)
 
@@ -42,6 +45,7 @@ class TenantService:
                 owner = User(
                     name=data.owner_name,
                     email=data.owner_email.lower().strip(),
+                    document_number=data.owner_document_number,
                     hashed_password=hashed_password(data.owner_password),
                     active=True
                 )
@@ -55,7 +59,6 @@ class TenantService:
             )
 
             self.user_tenant_repository.save(db, user_tenant)
-
             db.commit()
 
             return tenant

@@ -23,6 +23,7 @@ class TenantCreate(TenantBase):
     owner_name: str
     owner_email: EmailStr
     owner_password: str
+    owner_document_number: Optional[str] = Field(None, max_length=50)
 
 class TenantRead(TenantBase):
     id: int

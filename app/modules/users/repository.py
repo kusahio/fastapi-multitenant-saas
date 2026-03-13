@@ -18,14 +18,14 @@ class UserRepository:
         .first()
     )
   
-  def get_by_email_tenant(self, db: Session, user_email: str, tenant_id: int) -> User | None:
-    return db.query(User).filter(User.email == user_email, User.tenant_id == tenant_id).first()
+  # def get_by_email_tenant(self, db: Session, user_email: str, tenant_id: int) -> User | None:
+  #   return db.query(User).filter(User.email == user_email, User.tenant_id == tenant_id).first()
   
   def get_users(self, db: Session) -> list[User]:
     return db.query(User).all()
 
-  def list_by_tenant(self, db: Session, tenant_id: int):
-    return db.query(User).filter(User.tenant_id == tenant_id).all()
+  # def list_by_tenant(self, db: Session, tenant_id: int):
+  #   return db.query(User).filter(User.tenant_id == tenant_id).all()
   
   def update(self, db: Session, user: User, data: dict) -> User:
     for key, value in data.items():

@@ -19,7 +19,7 @@ class UserService:
         self.user_tenant_repository = user_tenant_repository
 
     def _validate_role_creation(self, current_user, new_role: UserRole):
-        role = current_user["role"]
+        role = current_user.get("role")
 
         if role == UserRole.PLATFORM_ADMIN:
             return
@@ -37,7 +37,7 @@ class UserService:
         raise InsufficientPermissionsError()
     
     def _validate_user_management_permissions(self, current_user, target_role):
-        role = current_user["role"]
+        role = current_user.get("role")
 
         if role == UserRole.PLATFORM_ADMIN:
             return
@@ -64,7 +64,7 @@ class UserService:
             db.commit()
             return user
 
-        tenant_id = current_user["tenant_id"]
+        tenant_id = current_user.get("tenant_id")
         user_tenant = self.user_tenant_repository.get_user_tenant(
             db, user_id, tenant_id
         )
@@ -85,10 +85,29 @@ class UserService:
             raise
 
     def create_user(self, db: Session, data: UserCreate, current_user):
-        tenant_id = current_user["tenant_id"]
         normalized_email = data.email.lower().strip()
         self._validate_role_creation(current_user, data.role)
 
+        if current_user.get("role") == UserRole.PLATFORM_ADMIN and data.role == UserRole.PLATFORM_ADMIN:
+            try:
+                user = User(
+                    name=data.name,
+                    email=normalized_email,
+                    document_number=data.document_number,
+                    hashed_password=hashed_password(data.password),
+                    is_platform_admin=True,
+                    active=True
+                )
+                self.user_repository.save(db, user)
+                db.commit()
+                db.refresh(user)
+                return user
+            except IntegrityError:
+                db.rollback()
+                raise UserAlreadyExistError()
+
+        tenant_id = current_user.get("tenant_id")
+        
         try:
             user = User(
                 name=data.name,
@@ -97,9 +116,7 @@ class UserService:
                 hashed_password=hashed_password(data.password),
                 active=True
             )
-
             self.user_repository.save(db, user)
-
             db.flush()
 
             user_tenant = UserTenant(
@@ -107,12 +124,10 @@ class UserService:
                 tenant_id=tenant_id,
                 role=data.role
             )
-
             self.user_tenant_repository.save(db, user_tenant)
-
+            
             db.commit()
             db.refresh(user)
-
             return user
 
         except IntegrityError:
@@ -120,7 +135,10 @@ class UserService:
             raise UserAlreadyExistError()
 
     def list_users(self, db: Session, current_user):
-        tenant_id = current_user["tenant_id"]
+        if current_user.get("role") == UserRole.PLATFORM_ADMIN:
+            return self.user_repository.get_users(db)
+        
+        tenant_id = current_user.get("tenant_id")
 
         user_tenants = self.user_tenant_repository.get_by_tenant_id(
             db,
@@ -130,24 +148,30 @@ class UserService:
         return [user_tenant.user for user_tenant in user_tenants]
 
     def update_user(self, db: Session, user_id: int, data: UserUpdate, current_user):
-        tenant_id = current_user["tenant_id"]
+        is_platform_admin = current_user.get("role") == UserRole.PLATFORM_ADMIN
 
-        user_tenant = self.user_tenant_repository.get_user_tenant(
-            db,
-            user_id,
-            tenant_id
-        )
-
-        if not user_tenant:
-            raise UserNotFoundError()
-
-        user = user_tenant.user
+        if is_platform_admin:
+            user = self.user_repository.get_by_id(db, user_id)
+            if not user:
+                raise UserNotFoundError()
+            user_tenant = None
+        else:
+            tenant_id = current_user.get("tenant_id")
+            user_tenant = self.user_tenant_repository.get_user_tenant(
+                db, user_id, tenant_id
+            )
+            if not user_tenant:
+                raise UserNotFoundError()
+            user = user_tenant.user
 
         update_data = data.model_dump(exclude_unset=True)
 
         if "role" in update_data:
-            self._validate_role_creation(current_user, update_data["role"])
-            user_tenant.role = update_data.pop("role")
+            if is_platform_admin:
+                update_data.pop("role")
+            else:
+                self._validate_role_creation(current_user, update_data["role"])
+                user_tenant.role = update_data.pop("role")
 
         if "password" in update_data:
             update_data["hashed_password"] = hashed_password(
@@ -155,20 +179,13 @@ class UserService:
             )
 
         try:
-            self.user_repository.update(
-                db,
-                user,
-                update_data
-            )
-
+            self.user_repository.update(db, user, update_data)
             db.commit()
             db.refresh(user)
-
             return user
-
         except IntegrityError:
             db.rollback()
-            raise ValueError("Update failed")
+            raise ValueError("Actualización fallida")
 
     def deactivate_user(self, db: Session, user_id: int, current_user):
         return self._change_user_status(db, user_id, current_user, new_status=False)
