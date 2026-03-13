@@ -11,10 +11,7 @@ from app.modules.user_tenants.repository import UserTenantRepository
 from app.domain.errors.users import UserAlreadyExistError
 from app.modules.users.schemas import UserTenantResponse
 
-router = APIRouter(
-    prefix="/users",
-    tags=["Users"]
-)
+router = APIRouter(prefix="/users", tags=["Users"])
 
 user_service = UserService(
     UserRepository(),

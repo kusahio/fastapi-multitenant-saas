@@ -53,6 +53,36 @@ class UserService:
             raise InsufficientPermissionsError()
 
         raise InsufficientPermissionsError()
+    
+    def _change_user_status(self, db: Session, user_id: int, current_user, new_status: bool):
+        if current_user.get("role") == UserRole.PLATFORM_ADMIN:
+            user = self.user_repository.get_by_id(db, user_id)
+            if not user:
+                raise UserNotFoundError()
+            
+            user.active = new_status
+            db.commit()
+            return user
+
+        tenant_id = current_user["tenant_id"]
+        user_tenant = self.user_tenant_repository.get_user_tenant(
+            db, user_id, tenant_id
+        )
+
+        if not user_tenant:
+            raise UserNotFoundError()
+
+        self._validate_user_management_permissions(
+            current_user, user_tenant.role
+        )
+
+        try:
+            user_tenant.user.active = new_status
+            db.commit()
+            return user_tenant.user
+        except Exception:
+            db.rollback()
+            raise
 
     def create_user(self, db: Session, data: UserCreate, current_user):
         tenant_id = current_user["tenant_id"]
@@ -63,6 +93,7 @@ class UserService:
             user = User(
                 name=data.name,
                 email=normalized_email,
+                document_number=data.document_number,
                 hashed_password=hashed_password(data.password),
                 active=True
             )
@@ -140,60 +171,10 @@ class UserService:
             raise ValueError("Update failed")
 
     def deactivate_user(self, db: Session, user_id: int, current_user):
-        tenant_id = current_user["tenant_id"]
-
-        user_tenant = self.user_tenant_repository.get_user_tenant(
-            db,
-            user_id,
-            tenant_id
-        )
-
-        if not user_tenant:
-            raise UserNotFoundError()
-
-        self._validate_user_management_permissions(
-            current_user,
-            user_tenant.role
-        )
-
-        try:
-            user_tenant.user.active = False
-
-            db.commit()
-
-            return user_tenant.user
-
-        except Exception:
-            db.rollback()
-            raise
+        return self._change_user_status(db, user_id, current_user, new_status=False)
 
     def activate_user(self, db: Session, user_id: int, current_user):
-        tenant_id = current_user["tenant_id"]
-
-        user_tenant = self.user_tenant_repository.get_user_tenant(
-            db,
-            user_id,
-            tenant_id
-        )
-
-        if not user_tenant:
-            raise UserNotFoundError()
-
-        self._validate_user_management_permissions(
-            current_user,
-            user_tenant.role
-        )
-
-        try:
-            user_tenant.user.active = True
-
-            db.commit()
-
-            return user_tenant.user
-
-        except Exception:
-            db.rollback()
-            raise
+        return self._change_user_status(db, user_id, current_user, new_status=True)
     
     def get_user_tenants(self, db: Session, user_id: int):
         user_tenants = self.user_tenant_repository.get_by_user_id(db, user_id)
