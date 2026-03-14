@@ -24,3 +24,12 @@ class CategoryRead(CategoryBase):
     tenant_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+class CategorySummaryItem(BaseModel):
+    id: int
+    name: str
+    total_products: int
+
+class PaginatedCategoriesResponse(BaseModel):
+    total: int
+    items: list[CategoryRead]

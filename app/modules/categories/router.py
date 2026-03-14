@@ -4,7 +4,10 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.core.guards.role_guard import RoleGuard
 from app.domain.enums.users_role import UserRole
-from app.modules.categories.schemas import CategoryCreate, CategoryRead, CategoryUpdate
+from app.modules.categories.schemas import (
+    CategoryCreate, CategoryRead, CategoryUpdate, 
+    PaginatedCategoriesResponse, CategorySummaryItem
+)
 from app.modules.categories.service import CategoryService
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
@@ -25,6 +28,27 @@ def create_category(data: CategoryCreate, db: Session = Depends(get_db), current
 )
 def list_categories(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return category_service.get_list(db, current_user["tenant_id"])
+
+@router.get(
+    "/", 
+    response_model=PaginatedCategoriesResponse, 
+    dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))]
+)
+def list_categories(
+    skip: int = 0, 
+    limit: int = 10, 
+    db: Session = Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    return category_service.get_paginated_list(db, current_user.get("tenant_id"), skip, limit)
+
+@router.get(
+    "/summary", 
+    response_model=list[CategorySummaryItem], 
+    dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))]
+)
+def get_categories_summary(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    return category_service.get_summary(db, current_user.get("tenant_id"))
 
 @router.patch(
     "/{category_id}", 

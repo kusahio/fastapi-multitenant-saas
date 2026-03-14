@@ -60,3 +60,22 @@ class CategoryService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot delete this category because it has associated products."
             )
+    
+    def get_paginated_list(self, db: Session, tenant_id: int, skip: int, limit: int):
+        total, items = self.repository.get_paginated(db, tenant_id, skip, limit)
+        return {
+            "total": total,
+            "items": items
+        }
+
+    def get_summary(self, db: Session, tenant_id: int):
+        summary_query = self.repository.get_summary(db, tenant_id)
+        
+        return [
+            {
+                "id": row.id,
+                "name": row.name,
+                "total_products": row.total_products
+            }
+            for row in summary_query
+        ]
