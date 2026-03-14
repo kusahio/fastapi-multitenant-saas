@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 from app.core.middleware.tenant_middleware import TenantMiddleware
 from app.modules.auth.router import router as auth_router
 from app.modules.users.router import router as users_router
@@ -8,6 +9,7 @@ from app.modules.products.router import router as products_router
 from app.modules.metrics.router import router as metrics_router
 from app.modules.orders.router import router as orders_router
 from app.modules.cash_shifts.router import router as cash_shifts_router
+from app.domain.errors.users import InvalidCredentialsError
 
 def create_app() -> FastAPI:
 
@@ -15,6 +17,13 @@ def create_app() -> FastAPI:
         title="SaaS API",
         version="1.0.0"
     )
+
+    @app.exception_handler(InvalidCredentialsError)
+    async def invalid_credentials_exception_handler(request: Request, exc: InvalidCredentialsError):
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"message": "Invalid credentials"},
+        )
 
     app.add_middleware(TenantMiddleware)
 

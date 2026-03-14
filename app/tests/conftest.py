@@ -12,6 +12,12 @@ from app.modules.tenants.models import Tenant
 from app.modules.user_tenants.models import UserTenant
 from app.core.security import hashed_password
 
+# Importar TODOS los modelos para registrarlos en Base.metadata antes del create_all
+from app.modules.categories.models import Category
+from app.modules.products.models import Product
+from app.modules.orders.models import Order, OrderItem
+from app.modules.cash_shifts.models import CashShift
+
 # In-memory SQLite database for testing
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
@@ -25,11 +31,13 @@ Base.metadata.create_all(bind=engine)
 
 # Dependency override for database session
 def override_get_db():
+    db = None
     try:
         db = TestingSessionLocal()
         yield db
     finally:
-        db.close()
+        if db:
+            db.close()
 
 app = create_app()
 app.dependency_overrides[get_db] = override_get_db
@@ -42,7 +50,12 @@ def db_session():
     connection = engine.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
-    
+
+    # Clean up the database
+    for table in reversed(Base.metadata.sorted_tables):
+        session.execute(table.delete())
+    session.commit()
+
     yield session
 
     session.close()
@@ -56,11 +69,15 @@ def client(db_session):
     Fixture for providing a FastAPI TestClient.
     """
     def _override_get_db():
-        yield db_session
+        try:
+            yield db_session
+        finally:
+            db_session.close()
 
     app.dependency_overrides[get_db] = _override_get_db
     yield TestClient(app)
     del app.dependency_overrides[get_db]
+
 
 # --- User and Token Fixtures ---
 
@@ -150,3 +167,64 @@ def staff_token(db_session):
     return create_access_token(
         {"sub": str(user.id), "tenant_id": tenant.id, "role": UserRole.STAFF.value}
     )
+
+@pytest.fixture(scope="function")
+def tenant_and_owner(db_session):
+    """Devuelve (tenant, user, owner_token) para tests que necesitan un tenant real."""
+    from app.modules.tenants.models import Tenant
+    from app.modules.users.models import User
+    from app.modules.user_tenants.models import UserTenant
+    from app.domain.enums.users_role import UserRole
+    from app.domain.enums.business_type import BusinessType
+    from app.core.security import hashed_password
+    from app.modules.auth.utils import create_access_token
+
+    tenant = Tenant(name="Main Tenant", slug="main-tenant", business_type=BusinessType.STORE)
+    db_session.add(tenant)
+    db_session.commit()
+
+    user = User(
+        name="Main Owner",
+        email="main.owner@test.com",
+        hashed_password=hashed_password("testpass123"),
+    )
+    db_session.add(user)
+    db_session.commit()
+
+    user_tenant = UserTenant(user_id=user.id, tenant_id=tenant.id, role=UserRole.OWNER)
+    db_session.add(user_tenant)
+    db_session.commit()
+
+    token = create_access_token(
+        {"sub": str(user.id), "tenant_id": tenant.id, "role": UserRole.OWNER.value}
+    )
+    return tenant, user, token
+
+
+@pytest.fixture(scope="function")
+def staff_in_tenant(db_session, tenant_and_owner):
+    """Devuelve (tenant, staff_user, staff_token) en el mismo tenant que tenant_and_owner."""
+    from app.modules.users.models import User
+    from app.modules.user_tenants.models import UserTenant
+    from app.domain.enums.users_role import UserRole
+    from app.core.security import hashed_password
+    from app.modules.auth.utils import create_access_token
+
+    tenant, _, _ = tenant_and_owner
+
+    staff_user = User(
+        name="Staff Member",
+        email="staff.member@test.com",
+        hashed_password=hashed_password("testpass123"),
+    )
+    db_session.add(staff_user)
+    db_session.commit()
+
+    user_tenant = UserTenant(user_id=staff_user.id, tenant_id=tenant.id, role=UserRole.STAFF)
+    db_session.add(user_tenant)
+    db_session.commit()
+
+    token = create_access_token(
+        {"sub": str(staff_user.id), "tenant_id": tenant.id, "role": UserRole.STAFF.value}
+    )
+    return tenant, staff_user, token
