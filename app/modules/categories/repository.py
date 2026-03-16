@@ -27,7 +27,7 @@ class CategoryRepository(BaseTenantRepository):
             query = query.filter(Category.active == is_active)
 
         total = query.count()
-        items = query.offset(skip).limit(limit).all()
+        items = query.order_by(Category.id.desc()).offset(skip).limit(limit).all()
 
         return total, items
 

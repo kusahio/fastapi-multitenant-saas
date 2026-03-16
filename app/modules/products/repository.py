@@ -31,7 +31,7 @@ class ProductRepository(BaseTenantRepository):
             query = query.filter(self.model.active == is_active)
 
         total = query.count()
-        items = query.offset(skip).limit(limit).all()
+        items = query.order_by(self.model.id.desc()).offset(skip).limit(limit).all()
 
         return total, items
 
