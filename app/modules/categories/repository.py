@@ -14,13 +14,21 @@ class CategoryRepository(BaseTenantRepository):
         db.flush()
         return category
     
-    def get_paginated(self, db: Session, tenant_id: int, skip: int, limit: int):
-        total = db.query(func.count(Category.id)).filter(Category.tenant_id == tenant_id).scalar() or 0
+    def get_paginated(
+        self, db: Session, tenant_id: int, skip: int, limit: int, 
+        search: str | None = None, is_active: bool | None = None
+    ):
+        query = db.query(Category).filter(Category.tenant_id == tenant_id)
+
+        if search:
+            query = query.filter(Category.name.ilike(f"%{search}%"))
         
-        items = db.query(Category).filter(
-            Category.tenant_id == tenant_id
-        ).offset(skip).limit(limit).all()
-        
+        if is_active is not None:
+            query = query.filter(Category.active == is_active)
+
+        total = query.count()
+        items = query.offset(skip).limit(limit).all()
+
         return total, items
 
     def get_summary(self, db: Session, tenant_id: int):

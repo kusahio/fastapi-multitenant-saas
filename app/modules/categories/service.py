@@ -61,8 +61,14 @@ class CategoryService:
                 detail="Cannot delete this category because it has associated products."
             )
     
-    def get_paginated_list(self, db: Session, tenant_id: int, skip: int, limit: int):
-        total, items = self.repository.get_paginated(db, tenant_id, skip, limit)
+    def get_paginated_list(
+        self, db: Session, tenant_id: int, skip: int, limit: int, 
+        search: str | None = None, is_active: bool | None = None
+    ):
+        total, items = self.repository.get_paginated(
+            db, tenant_id, skip, limit, search, is_active
+        )
+        
         return {
             "total": total,
             "items": items
