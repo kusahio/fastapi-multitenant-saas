@@ -12,8 +12,7 @@ class CategoryService:
 
     def create(self, db: Session, data: CategoryCreate, tenant_id: int):
         category = Category(
-            name=data.name,
-            active=data.active,
+            **data.model_dump(),
             tenant_id=tenant_id
         )
         self.repository.save(db, category)
@@ -28,7 +27,7 @@ class CategoryService:
         category = self.repository.get_by_id(db, tenant_id, category_id)
         if not category:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+                status_code=status.HTTP_404_NOT_FOUND, detail="No se encontró la categoría")
         return category
 
     def update(self, db: Session, category_id: int, data: CategoryUpdate, tenant_id: int):
@@ -48,7 +47,7 @@ class CategoryService:
             if not deleted_category:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Category not found"
+                    detail="No se encontró la categoría"
                 )
 
             db.commit()
@@ -58,7 +57,7 @@ class CategoryService:
             db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete this category because it has associated products."
+                detail="No se puede eliminar la categoría porque tiene productos agotados"
             )
     
     def get_paginated_list(

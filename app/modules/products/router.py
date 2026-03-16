@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.core.guards.role_guard import RoleGuard
 from app.domain.enums.users_role import UserRole
-from app.modules.products.schemas import ProductCreate, ProductRead, ProductUpdate
+from app.modules.products.schemas import ProductCreate, ProductRead, ProductUpdate, PaginatedProductsResponse
 from app.modules.products.service import ProductService
 from app.domain.enums.unit_type import UnitType
 
@@ -22,12 +22,22 @@ def create_product(data: ProductCreate, db: Session = Depends(get_db), current_u
 
 @router.get(
     "/",
-    response_model=list[ProductRead],
+    response_model=PaginatedProductsResponse,
     dependencies=[
         Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))]
 )
-def list_products(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    return product_service.get_list(db, current_user["tenant_id"])
+def list_products(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=10, ge=1, le=100),
+    search: str | None = Query(default=None),
+    category_id: int | None = Query(default=None),
+    is_active: bool | None = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return product_service.get_paginated_list(
+        db, current_user.get("tenant_id"), skip, limit, search, category_id, is_active
+    )
 
 @router.patch(
     "/{product_id}",

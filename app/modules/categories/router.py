@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -23,24 +23,20 @@ def create_category(data: CategoryCreate, db: Session = Depends(get_db), current
 
 @router.get(
     "/", 
-    response_model=list[CategoryRead], 
-    dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))]
-)
-def list_categories(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    return category_service.get_list(db, current_user["tenant_id"])
-
-@router.get(
-    "/", 
     response_model=PaginatedCategoriesResponse, 
     dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))]
 )
 def list_categories(
-    skip: int = 0, 
-    limit: int = 10, 
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=10, ge=1, le=100),
+    search: str | None = Query(default=None),
+    is_active: bool | None = Query(default=None),
     db: Session = Depends(get_db), 
     current_user=Depends(get_current_user)
 ):
-    return category_service.get_paginated_list(db, current_user.get("tenant_id"), skip, limit)
+    return category_service.get_paginated_list(
+        db, current_user.get("tenant_id"), skip, limit, search, is_active
+    )
 
 @router.get(
     "/summary", 

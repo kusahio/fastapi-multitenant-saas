@@ -29,6 +29,17 @@ class ProductService:
     def get_list(self, db: Session, tenant_id: int):
         return self.repository.get_all(db, tenant_id)
 
+    def get_paginated_list(
+        self, db: Session, tenant_id: int, skip: int, limit: int,
+        search: str | None = None,
+        category_id: int | None = None,
+        is_active: bool | None = None
+    ):
+        total, items = self.repository.get_paginated(
+            db, tenant_id, skip, limit, search, category_id, is_active
+        )
+        return {"total": total, "items": items}
+
     def get_by_id(self, db: Session, product_id: int, tenant_id: int):
         product = self.repository.get_by_id(db, tenant_id, product_id)
         if not product:
