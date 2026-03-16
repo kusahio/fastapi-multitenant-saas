@@ -10,6 +10,13 @@ class CategoryService:
     def __init__(self):
         self.repository = CategoryRepository()
 
+    def _change_status(self, db: Session, category_id: int, tenant_id: int, new_status: bool):
+        category = self.get_by_id(db, category_id, tenant_id)
+        category.active = new_status
+        db.commit()
+        db.refresh(category)
+        return category
+
     def create(self, db: Session, data: CategoryCreate, tenant_id: int):
         category = Category(
             **data.model_dump(),
@@ -59,6 +66,12 @@ class CategoryService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No se puede eliminar la categoría porque tiene productos agotados"
             )
+
+    def deactivate(self, db: Session, category_id: int, tenant_id: int):
+        return self._change_status(db, category_id, tenant_id, False)
+
+    def activate(self, db: Session, category_id: int, tenant_id: int):
+        return self._change_status(db, category_id, tenant_id, True)
     
     def get_paginated_list(
         self, db: Session, tenant_id: int, skip: int, limit: int, 

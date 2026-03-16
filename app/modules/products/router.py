@@ -36,7 +36,8 @@ def list_products(
     current_user=Depends(get_current_user)
 ):
     return product_service.get_paginated_list(
-        db, current_user.get("tenant_id"), skip, limit, search, category_id, is_active
+        db, current_user.get(
+            "tenant_id"), skip, limit, search, category_id, is_active
     )
 
 @router.patch(
@@ -55,10 +56,35 @@ def update_product(product_id: int, data: ProductUpdate, db: Session = Depends(g
 def delete_product(product_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return product_service.delete(db, product_id, current_user["tenant_id"])
 
+@router.patch(
+    "/{product_id}/deactivate",
+    response_model=ProductRead,
+    dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN))]
+)
+def deactivate_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return product_service.deactivate(db, product_id, current_user["tenant_id"])
+
+@router.patch(
+    "/{product_id}/activate",
+    response_model=ProductRead,
+    dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN))]
+)
+def activate_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return product_service.activate(db, product_id, current_user["tenant_id"])
+
 @router.get(
-    "/search", 
+    "/search",
     response_model=list[ProductRead],
-    dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))]
+    dependencies=[
+        Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))]
 )
 def search_products(
     q: str,

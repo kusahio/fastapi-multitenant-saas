@@ -7,6 +7,13 @@ from app.modules.products.models import Product
 class ProductService:
     def __init__(self):
         self.repository = ProductRepository()
+    
+    def _change_status(self, db: Session, product_id: int, tenant_id: int, new_status: bool):
+        product = self.get_by_id(db, product_id, tenant_id)
+        product.active = new_status
+        db.commit()
+        db.refresh(product)
+        return product
 
     def create(self, db: Session, data: ProductCreate, tenant_id: int):
         if data.barcode:
@@ -75,6 +82,12 @@ class ProductService:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Producto no encontrado")
         db.commit()
         return deleted_product
+    
+    def deactivate(self, db: Session, product_id: int, tenant_id: int):
+        return self._change_status(db, product_id, tenant_id, False)
+
+    def activate(self, db: Session, product_id: int, tenant_id: int):
+        return self._change_status(db, product_id, tenant_id, True)
 
     def find_for_pos(self, db: Session, tenant_id: int, query: str):
         results = self.repository.search_by_term(db, tenant_id, query)
