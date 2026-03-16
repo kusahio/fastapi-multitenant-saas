@@ -49,3 +49,18 @@ class ProductRepository(BaseTenantRepository):
             .limit(10)
             .all()
         )
+    
+    def get_by_id_for_update(self, db: Session, tenant_id: int, product_id: int):
+        """
+        Busca un producto y bloquea la fila en la base de datos 
+        hasta que termine la transacción actual (commit o rollback).
+        """
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.tenant_id == tenant_id,
+                self.model.id == product_id
+            )
+            .with_for_update() # <-- ¡La magia ocurre aquí!
+            .first()
+        )
