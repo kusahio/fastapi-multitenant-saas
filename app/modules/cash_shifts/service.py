@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from decimal import Decimal
 from fastapi import HTTPException, status
 from datetime import datetime, timezone
 from app.modules.cash_shifts.repository import CashShiftRepository
@@ -33,7 +34,7 @@ class CashShiftService:
         total_sales = db.query(func.sum(Order.total)).filter(
             Order.cash_shift_id == shift.id,
             Order.tenant_id == tenant_id
-        ).scalar() or 0
+        ).scalar() or Decimal('0.00')
 
         shift.expected_balance = shift.opening_balance + total_sales
         shift.closing_balance = data.closing_balance

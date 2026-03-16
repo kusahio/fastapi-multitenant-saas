@@ -14,6 +14,12 @@ class OrderService:
         self.product_repository = ProductRepository()
 
     def create_order(self, db: Session, tenant_id: int, user_id: int, data: OrderCreate):
+        if not data.items:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La venta debe contener al menos un producto."
+            )
+
         active_shift = CashShiftRepository().get_active_shift(db, tenant_id, user_id)
 
         if not active_shift:
@@ -26,7 +32,7 @@ class OrderService:
         order_items = []
 
         for item in data.items:
-            product = self.product_repository.get_by_id(db, tenant_id, item.product_id)
+            product = self.product_repository.get_by_id_for_update(db, tenant_id, item.product_id)
 
             if not product or not product.active:
                 raise HTTPException(
@@ -47,6 +53,8 @@ class OrderService:
                 final_discount = prod_discount + cat_discount
             else:
                 final_discount = max(prod_discount, cat_discount)
+            
+            final_discount = min(final_discount, Decimal('100.00'))
 
             discount_multiplier = Decimal('1') - (final_discount / Decimal('100'))
             unit_price = product.price
