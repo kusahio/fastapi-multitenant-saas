@@ -79,7 +79,11 @@ class TenantService:
         tenant = self.get_by_id(db, tenant_id)
         updated_data = data.model_dump(exclude_unset=True)
 
-        return self.tenant_repository.update(db, tenant, updated_data)
+        updated_tenant = self.tenant_repository.update(db, tenant, updated_data)
+        db.commit()
+        db.refresh(updated_tenant)
+        
+        return updated_tenant
 
     def get_by_slug(self, db: Session, tenant_slug: str) -> Tenant:
         tenant = self.tenant_repository.get_by_slug(db, tenant_slug)

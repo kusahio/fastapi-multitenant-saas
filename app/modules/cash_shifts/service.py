@@ -31,9 +31,8 @@ class CashShiftService:
             raise HTTPException(status_code=404, detail="No tienes ninguna caja abierta.")
 
         total_sales = db.query(func.sum(Order.total)).filter(
-            Order.tenant_id == tenant_id,
-            Order.user_id == user_id,
-            Order.created_at >= shift.opened_at
+            Order.cash_shift_id == shift.id,
+            Order.tenant_id == tenant_id
         ).scalar() or 0
 
         shift.expected_balance = shift.opening_balance + total_sales
@@ -44,4 +43,13 @@ class CashShiftService:
 
         db.commit()
         db.refresh(shift)
+        return shift
+    
+    def get_active_shift_or_404(self, db: Session, tenant_id: int, user_id: int):
+        shift = self.repository.get_active_shift(db, tenant_id, user_id)
+        if not shift:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No tienes una caja abierta actualmente."
+            )
         return shift

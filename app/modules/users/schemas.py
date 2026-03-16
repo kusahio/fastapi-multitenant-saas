@@ -33,3 +33,6 @@ class UserTenantResponse(BaseModel):
     role: UserRole
 
     model_config = ConfigDict(from_attributes=True)
+
+class UserWithRoleRead(UserRead):
+    role: UserRole

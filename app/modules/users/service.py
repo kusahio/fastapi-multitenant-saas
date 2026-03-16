@@ -134,18 +134,8 @@ class UserService:
             db.rollback()
             raise UserAlreadyExistError()
 
-    def list_users(self, db: Session, current_user):
-        if current_user.get("role") == UserRole.PLATFORM_ADMIN:
-            return self.user_repository.get_users(db)
-        
-        tenant_id = current_user.get("tenant_id")
-
-        user_tenants = self.user_tenant_repository.get_by_tenant_id(
-            db,
-            tenant_id
-        )
-
-        return [user_tenant.user for user_tenant in user_tenants]
+    def list_users(self, db: Session, tenant_id: int, skip: int = 0, limit: int = 100):
+        return self.user_repository.get_users_by_tenant_paginated(db, tenant_id, skip, limit)
 
     def update_user(self, db: Session, user_id: int, data: UserUpdate, current_user):
         is_platform_admin = current_user.get("role") == UserRole.PLATFORM_ADMIN

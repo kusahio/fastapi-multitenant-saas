@@ -50,12 +50,8 @@ def get_active_shift(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    from app.modules.cash_shifts.repository import CashShiftRepository
-    shift = CashShiftRepository().get_active_shift(
-        db, current_user.get("tenant_id"), current_user.get("user_id"))
-
-    if not shift:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="No tienes una caja abierta actualmente.")
-
-    return shift
+    return service.get_active_shift_or_404(
+        db,
+        current_user.get("tenant_id"),
+        current_user.get("user_id")
+    )

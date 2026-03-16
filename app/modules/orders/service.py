@@ -1,3 +1,4 @@
+import logging
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from decimal import Decimal
@@ -68,6 +69,7 @@ class OrderService:
         order = Order(
             tenant_id=tenant_id,
             user_id=user_id,
+            cash_shift_id=active_shift.id,
             payment_type=data.payment_type,
             total=total_order_amount,
             items=order_items
@@ -78,11 +80,15 @@ class OrderService:
             db.commit() 
             db.refresh(order)
             return order
+        except HTTPException:
+            db.rollback()
+            raise
         except Exception as e:
             db.rollback()
+            logging.error(f"Error al procesar la venta: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Error crítico al procesar la venta. Transacción cancelada."
+                detail="Error crítico al procesar la venta. Revisa los logs del servidor."
             )
 
     def get_list(self, db: Session, tenant_id: int):

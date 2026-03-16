@@ -55,7 +55,11 @@ def update_product(product_id: int, data: ProductUpdate, db: Session = Depends(g
 def delete_product(product_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return product_service.delete(db, product_id, current_user["tenant_id"])
 
-@router.get("/search", response_model=list[ProductRead])
+@router.get(
+    "/search", 
+    response_model=list[ProductRead],
+    dependencies=[Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))]
+)
 def search_products(
     q: str,
     db: Session = Depends(get_db),
