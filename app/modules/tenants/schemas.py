@@ -11,6 +11,7 @@ class TenantBase(BaseModel):
         max_length=50,
         pattern=r'^[a-z0-9]+(-[a-z0-9]+)*$'
     )
+    logo_url: Optional[str] = None
     business_type: BusinessType
 
     @field_validator('slug')
@@ -23,6 +24,7 @@ class TenantCreate(TenantBase):
     owner_name: str
     owner_email: EmailStr
     owner_password: str
+    owner_document_number: Optional[str] = Field(None, max_length=50)
 
 class TenantRead(TenantBase):
     id: int
@@ -35,3 +37,4 @@ class TenantUpdate(BaseModel):
     name: Optional[str] = None
     business_type: Optional[BusinessType] = None
     active: Optional[bool] = None
+    logo_url: Optional[str] = None

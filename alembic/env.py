@@ -11,7 +11,13 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.core.database import Base, DATABASE_URL
+from app.modules.users.models import User
 from app.modules.tenants.models import Tenant
+from app.modules.user_tenants.models import UserTenant
+from app.modules.categories.models import Category
+from app.modules.products.models import Product
+from app.modules.orders.models import Order
+from app.modules.cash_shifts.models import CashShift
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

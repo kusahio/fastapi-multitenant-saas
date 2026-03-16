@@ -9,18 +9,25 @@ from app.modules.users.service import UserService
 from app.modules.users.repository import UserRepository
 from app.modules.user_tenants.repository import UserTenantRepository
 from app.domain.errors.users import UserAlreadyExistError
+from app.modules.users.schemas import UserTenantResponse
+from app.modules.users.schemas import UserWithRoleRead
 
-router = APIRouter(
-    prefix="/users",
-    tags=["Users"]
-)
+router = APIRouter(prefix="/users", tags=["Users"])
 
 user_service = UserService(
     UserRepository(),
     UserTenantRepository()
 )
 
-@router.post("/", response_model=UserRead, status_code=status.HTTP_201_CREATED, dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN, UserRole.OWNER, UserRole.ADMIN))])
+
+@router.post(
+    "/", response_model=UserRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[
+        Depends(RoleGuard(UserRole.PLATFORM_ADMIN,
+                UserRole.OWNER, UserRole.ADMIN))
+    ]
+)
 def create_user(
     data: UserCreate,
     current_user=Depends(get_current_user),
@@ -34,14 +41,46 @@ def create_user(
             detail="User with this email already exists"
         )
 
-@router.get("/", response_model=list[UserRead], dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN, UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))])
-def list_users(
+
+@router.get(
+    "/", response_model=list[UserRead],
+    dependencies=[Depends(
+        RoleGuard(UserRole.PLATFORM_ADMIN, UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))
+    ]
+)
+@router.get(
+    "/",
+    response_model=list[UserWithRoleRead],
+    dependencies=[Depends(
+        RoleGuard(UserRole.PLATFORM_ADMIN, UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))
+    ]
+)
+def get_users(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    tenant_id = current_user.get("tenant_id")
+    return user_service.list_users(db, tenant_id, skip=skip, limit=limit)
+
+
+@router.get("/me/tenants", response_model=list[UserTenantResponse])
+def get_my_tenants(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return user_service.list_users(db, current_user)
+    return user_service.get_user_tenants(db, current_user["user_id"])
 
-@router.patch("/{user_id}", response_model=UserRead, dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN, UserRole.OWNER, UserRole.ADMIN))])
+
+@router.patch(
+    "/{user_id}",
+    response_model=UserRead,
+    dependencies=[
+        Depends(RoleGuard(UserRole.PLATFORM_ADMIN,
+                UserRole.OWNER, UserRole.ADMIN))
+    ]
+)
 def update_user(
     user_id: int,
     data: UserUpdate,
@@ -55,7 +94,14 @@ def update_user(
         current_user
     )
 
-@router.delete("/{user_id}", dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN, UserRole.OWNER, UserRole.ADMIN))])
+
+@router.delete(
+    "/{user_id}",
+    dependencies=[
+        Depends(RoleGuard(UserRole.PLATFORM_ADMIN,
+                UserRole.OWNER, UserRole.ADMIN))
+    ]
+)
 def deactivate_user(
     user_id: int,
     current_user=Depends(get_current_user),
@@ -67,7 +113,15 @@ def deactivate_user(
         current_user
     )
 
-@router.patch("/{user_id}/activate", response_model=UserRead, dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN, UserRole.OWNER, UserRole.ADMIN))])
+
+@router.patch(
+    "/{user_id}/activate",
+    response_model=UserRead,
+    dependencies=[
+        Depends(RoleGuard(UserRole.PLATFORM_ADMIN,
+                UserRole.OWNER, UserRole.ADMIN))
+    ]
+)
 def activate_user(
     user_id: int,
     current_user=Depends(get_current_user),
