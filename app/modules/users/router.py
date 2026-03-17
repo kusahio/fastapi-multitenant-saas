@@ -19,7 +19,6 @@ user_service = UserService(
     UserTenantRepository()
 )
 
-
 @router.post(
     "/", response_model=UserRead,
     status_code=status.HTTP_201_CREATED,
@@ -41,13 +40,6 @@ def create_user(
             detail="User with this email already exists"
         )
 
-
-@router.get(
-    "/", response_model=list[UserRead],
-    dependencies=[Depends(
-        RoleGuard(UserRole.PLATFORM_ADMIN, UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))
-    ]
-)
 @router.get(
     "/",
     response_model=list[UserWithRoleRead],
