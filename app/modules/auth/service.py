@@ -30,6 +30,7 @@ class AuthService:
             })
             return {
                 "user_id": user.id,
+                "name": user.name,
                 "tenants": [],
                 "access_token": token
             }
@@ -44,6 +45,7 @@ class AuthService:
         for user_tenant in user_tenants:
             tenants.append({
                 "tenant_id": user_tenant.tenant.id,
+                "name": user_tenant.tenant.name,
                 "slug": user_tenant.tenant.slug,
                 "role": user_tenant.role.value
             })
@@ -54,6 +56,7 @@ class AuthService:
 
         return {
             "user_id": user.id,
+            "name": user.name,
             "tenants": tenants,
             "access_token": token
         }
