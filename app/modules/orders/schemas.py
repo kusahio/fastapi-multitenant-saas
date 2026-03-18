@@ -14,7 +14,8 @@ class OrderCreate(BaseModel):
 
 class OrderItemRead(BaseModel):
     id: int
-    product_id: int
+    product_id: int | None
+    product_name: str
     quantity: Decimal
     unit_price: Decimal
     discount: Decimal

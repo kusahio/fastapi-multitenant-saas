@@ -65,6 +65,7 @@ class OrderService:
 
             order_item = OrderItem(
                 product_id=product.id,
+                product_name=product.name,
                 quantity=item.quantity,
                 unit_price=unit_price,
                 discount=final_discount,
