@@ -55,10 +55,10 @@ class ProductService:
         product = self.get_by_id(db, product_id, tenant_id)
         update_data = data.model_dump(exclude_unset=True)
 
-        if "barcode" in update_data and update_data["barcode"]:
+        if "barcode" in update_data and update_data.get("barcode") is not None:
             existing = db.query(Product).filter(
                 Product.tenant_id == tenant_id,
-                Product.barcode == update_data["barcode"],
+                Product.barcode == update_data.get("barcode"),
                 Product.id != product_id
             ).first()
             if existing:

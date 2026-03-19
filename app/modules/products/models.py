@@ -6,7 +6,8 @@ from sqlalchemy import (
     ForeignKey, 
     Numeric, 
     Enum, 
-    DateTime
+    DateTime,
+    UniqueConstraint
 )
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -16,7 +17,7 @@ class Product(Base):
     __tablename__ = "products"
 
     id = Column(Integer, primary_key=True, index=True)
-    barcode = Column(String(50), unique=True, nullable=True, index=True)
+    barcode = Column(String(50),nullable=True)
     name = Column(String(100), nullable=False)
     description = Column(String, nullable=True)
     image_url = Column(String, nullable=True)
@@ -31,3 +32,7 @@ class Product(Base):
     deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     category = relationship("Category", back_populates="products")
+
+    __table_args__ = (
+        UniqueConstraint('tenant_id', 'barcode', name='uq_product_tenant_barcode'),
+    )
