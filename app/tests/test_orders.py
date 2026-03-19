@@ -134,9 +134,8 @@ def test_create_order_empty_items_rejected(client: TestClient, owner_token: str)
 def test_create_order_reduces_stock(client: TestClient, owner_token: str, order_setup: int):
     prod_id = order_setup
 
-    # Obtener stock inicial
     products_before = client.get("/products/", headers={"Authorization": f"Bearer {owner_token}"}).json()
-    stock_before = next(p["stock"] for p in products_before if p["id"] == prod_id)
+    stock_before = next(p["stock"] for p in products_before["items"] if p["id"] == prod_id)
 
     client.post(
         "/orders/",
@@ -145,7 +144,7 @@ def test_create_order_reduces_stock(client: TestClient, owner_token: str, order_
     )
 
     products_after = client.get("/products/", headers={"Authorization": f"Bearer {owner_token}"}).json()
-    stock_after = next(p["stock"] for p in products_after if p["id"] == prod_id)
+    stock_after = next(p["stock"] for p in products_after["items"] if p["id"] == prod_id)
 
     assert float(stock_after) == float(stock_before) - 3
 
