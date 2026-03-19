@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Numeric, Enum
+from sqlalchemy import (
+    Column, 
+    Integer, 
+    String, 
+    Boolean, 
+    ForeignKey, 
+    Numeric, 
+    Enum, 
+    DateTime
+)
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 from app.domain.enums.unit_type import UnitType
@@ -19,5 +28,6 @@ class Product(Base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)
     active = Column(Boolean, default=True, nullable=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     category = relationship("Category", back_populates="products")

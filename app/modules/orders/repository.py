@@ -14,3 +14,15 @@ class OrderRepository(BaseTenantRepository):
             .order_by(self.model.created_at.desc())
             .all()
         )
+    
+    def get_paginated(
+        self, db: Session, tenant_id: int, skip: int, limit: int
+    ):
+        query = (
+            db.query(self.model)
+            .filter(self.model.tenant_id == tenant_id)
+            .order_by(self.model.created_at.desc())
+        )
+        total = query.count()
+        items = query.offset(skip).limit(limit).all()
+        return total, items

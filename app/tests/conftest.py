@@ -18,6 +18,9 @@ from app.modules.products.models import Product
 from app.modules.orders.models import Order, OrderItem
 from app.modules.cash_shifts.models import CashShift
 
+from app.core.limiter import limiter
+from slowapi.middleware import SlowAPIMiddleware
+
 # In-memory SQLite database for testing
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
@@ -75,7 +78,9 @@ def client(db_session):
         yield db_session
 
     app.dependency_overrides[get_db] = _override_get_db
+    limiter.enabled = False
     yield TestClient(app)
+    limiter.enabled = True
     del app.dependency_overrides[get_db]
 
 

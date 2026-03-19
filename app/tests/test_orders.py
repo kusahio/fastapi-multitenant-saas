@@ -158,7 +158,10 @@ def test_list_orders(client: TestClient, owner_token: str, order_setup: int):
     )
     response = client.get("/orders/", headers={"Authorization": f"Bearer {owner_token}"})
     assert response.status_code == 200
-    assert len(response.json()) >= 1
+    data = response.json()
+    assert "total" in data
+    assert "items" in data
+    assert len(data["items"]) >= 1
 
 
 def test_get_order_by_id(client: TestClient, owner_token: str, order_setup: int):

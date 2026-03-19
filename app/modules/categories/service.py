@@ -32,9 +32,11 @@ class CategoryService:
 
     def get_by_id(self, db: Session, category_id: int, tenant_id: int):
         category = self.repository.get_by_id(db, tenant_id, category_id)
-        if not category:
+        if not category or category.deleted_at is not None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="No se encontró la categoría")
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="No se encontró la categoría"
+            )
         return category
 
     def update(self, db: Session, category_id: int, data: CategoryUpdate, tenant_id: int):
@@ -48,7 +50,7 @@ class CategoryService:
 
     def delete(self, db: Session, category_id: int, tenant_id: int):
         try:
-            deleted_category = self.repository.delete(
+            deleted_category = self.repository.soft_delete(
                 db, tenant_id, category_id)
 
             if not deleted_category:

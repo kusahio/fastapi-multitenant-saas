@@ -33,3 +33,7 @@ class OrderRead(BaseModel):
     items: List[OrderItemRead]
 
     model_config = ConfigDict(from_attributes=True)
+
+class PaginatedOrdersResponse(BaseModel):
+    total: int
+    items: List[OrderRead]

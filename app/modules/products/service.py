@@ -76,10 +76,12 @@ class ProductService:
         return product
 
     def delete(self, db: Session, product_id: int, tenant_id: int):
-        deleted_product = self.repository.delete(db, tenant_id, product_id)
+        deleted_product = self.repository.soft_delete(db, tenant_id, product_id)
         if not deleted_product:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Producto no encontrado")
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="Producto no encontrado"
+            )
         db.commit()
         return deleted_product
     
