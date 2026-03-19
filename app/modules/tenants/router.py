@@ -34,7 +34,7 @@ def create_tenant(
     except TenantAlreadyExistsError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail='Tenant with this slug already exists'
+            detail='Ya existe un tenant con este slug'
         )
 
 @router.get('/', response_model=list[TenantRead], status_code=status.HTTP_200_OK, dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN))])
@@ -55,7 +55,7 @@ def get_tenant_by_id(
     except TenantNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Tenant not found'
+            detail='Tenant no encontrado'
         )
 
 @router.get('/slug/{tenant_slug}', response_model=TenantRead, status_code=status.HTTP_200_OK, dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN))])
@@ -69,7 +69,7 @@ def get_tenant_by_slug(
     except TenantNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Tenant not found'
+            detail='Tenant no encontrado'
         )
   
 @router.put('/{tenant_id}', response_model=TenantRead, status_code=status.HTTP_200_OK, dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN))])
@@ -84,7 +84,7 @@ def update_tenant(
     except TenantNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Tenant not found'
+            detail='Tenant no encontrado'
         )
 
 @router.patch('/{tenant_id}/activate', response_model=TenantRead, status_code=status.HTTP_200_OK, dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN))])
@@ -98,7 +98,7 @@ def activate_tenant(
     except TenantNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Tenant not found'
+            detail='Tenant no encontrado'
         )
 
 @router.patch('/{tenant_id}/deactivate', response_model=TenantRead, status_code=status.HTTP_200_OK, dependencies=[Depends(RoleGuard(UserRole.PLATFORM_ADMIN))])
@@ -112,5 +112,5 @@ def deactivate_tenant(
     except TenantNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Tenant not found'
+            detail='Tenant no encontrado'
         )

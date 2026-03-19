@@ -1,11 +1,3 @@
-# from passlib.context import CryptContext
-
-# pwd_context = CryptContext(
-#     schemes=['bcrypt'],
-#     deprecated='auto',
-#     bcrypt__rounds=12
-# )
-
 import bcrypt
 
 def hashed_password(password: str) -> str:
@@ -22,4 +14,3 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         )
     except Exception:
         return False
-    # return pwd_context.verify(plain_password, hashed_password)

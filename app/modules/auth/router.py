@@ -45,13 +45,13 @@ def get_me(current_user=Depends(get_current_user), db: Session = Depends(get_db)
         if not tenant:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tenant not found"
+                detail="Tenant no encontrado"
             )
 
         if not tenant.active:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Tenant inactive"
+                detail="Tenant inactivo"
             )
 
         user_context["active_tenant"] = {

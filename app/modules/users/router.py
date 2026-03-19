@@ -37,7 +37,7 @@ def create_user(
     except UserAlreadyExistError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="User with this email already exists"
+            detail="Ya existe un usuario con este email"
         )
 
 @router.get(
@@ -127,5 +127,5 @@ def activate_user(
     except UserNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail="No se encontró el usuario"
         )
