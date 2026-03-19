@@ -12,7 +12,7 @@ class RoleGuard:
         if user_role not in self.allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions"
+                detail="Permisos insuficientes"
             )
 
         return current_user

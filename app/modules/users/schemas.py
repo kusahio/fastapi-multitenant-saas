@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from app.domain.enums.users_role import UserRole
+from app.domain.enums.tenant_role import TenantRole
 from datetime import datetime
 from typing import Optional
 
@@ -10,7 +10,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=6)
-    role: UserRole
+    role: TenantRole
 
 class UserRead(UserBase):
     id: int
@@ -24,15 +24,15 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     document_number: Optional[str] = Field(None, max_length=50)
     password: Optional[str] = Field(None, min_length=6)
-    role: Optional[UserRole] = None
+    role: Optional[TenantRole] = None
 
 class UserTenantResponse(BaseModel):
     tenant_id: int
     tenant_name: str
     tenant_slug: str
-    role: UserRole
+    role: TenantRole
 
     model_config = ConfigDict(from_attributes=True)
 
 class UserWithRoleRead(UserRead):
-    role: UserRole
+    role: TenantRole

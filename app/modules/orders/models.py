@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, Numeric, DateTime, Enum,  func
+from sqlalchemy import Column, Integer, ForeignKey, Numeric, DateTime, Enum, String, func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 from app.domain.enums.payment_type import PaymentType
@@ -24,7 +24,8 @@ class OrderItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=True)
+    product_name = Column(String(100), nullable=False)
     quantity = Column(Numeric(10, 3), nullable=False) 
     unit_price = Column(Numeric(10, 2), nullable=False) 
     discount = Column(Numeric(10, 2), default=0)

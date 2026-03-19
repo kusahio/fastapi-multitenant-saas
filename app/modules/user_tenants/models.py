@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.core.database import Base
-from app.domain.enums.users_role import UserRole
+from app.domain.enums.tenant_role import TenantRole
 
 
 class UserTenant(Base):
@@ -12,7 +12,7 @@ class UserTenant(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)
-    role = Column(Enum(UserRole), nullable=False)
+    role = Column(Enum(TenantRole), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (

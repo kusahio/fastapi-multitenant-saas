@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status, Query, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.core.guards.role_guard import RoleGuard
 from app.domain.enums.users_role import UserRole
-from app.modules.orders.schemas import OrderCreate, OrderRead
+from app.modules.orders.schemas import OrderCreate, OrderRead, PaginatedOrdersResponse
 from app.modules.orders.service import OrderService
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
@@ -28,16 +28,18 @@ def create_order(
 
 @router.get(
     "/",
-    response_model=list[OrderRead],
+    response_model=PaginatedOrdersResponse,
     dependencies=[
         Depends(RoleGuard(UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))
     ]
 )
 def list_orders(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    return order_service.get_list(db, current_user.get("tenant_id"))
+    return order_service.get_paginated_list(db, current_user.get("tenant_id"), skip, limit)
 
 
 @router.get(

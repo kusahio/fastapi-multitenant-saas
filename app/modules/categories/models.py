@@ -1,4 +1,12 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Numeric
+from sqlalchemy import (
+    Column, 
+    Integer, 
+    String, 
+    Boolean, 
+    ForeignKey, 
+    Numeric, 
+    DateTime
+)
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -12,5 +20,6 @@ class Category(Base):
     is_discount_active = Column(Boolean, default=False, nullable=False)
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)
     active = Column(Boolean, default=True, nullable=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     products = relationship("Product", back_populates="category")

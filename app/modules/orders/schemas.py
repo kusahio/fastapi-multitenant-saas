@@ -14,7 +14,8 @@ class OrderCreate(BaseModel):
 
 class OrderItemRead(BaseModel):
     id: int
-    product_id: int
+    product_id: int | None
+    product_name: str
     quantity: Decimal
     unit_price: Decimal
     discount: Decimal
@@ -32,3 +33,7 @@ class OrderRead(BaseModel):
     items: List[OrderItemRead]
 
     model_config = ConfigDict(from_attributes=True)
+
+class PaginatedOrdersResponse(BaseModel):
+    total: int
+    items: List[OrderRead]

@@ -96,12 +96,18 @@ def test_list_products(client: TestClient, owner_token: str, category_id: int):
     )
     response = client.get("/products/", headers={"Authorization": f"Bearer {owner_token}"})
     assert response.status_code == 200
-    assert len(response.json()) >= 1
+    data = response.json()
+    assert "total" in data
+    assert "items" in data
+    assert len(data["items"]) >= 1
 
 
 def test_list_products_staff_allowed(client: TestClient, staff_token: str):
     response = client.get("/products/", headers={"Authorization": f"Bearer {staff_token}"})
     assert response.status_code == 200
+    data = response.json()
+    assert "total" in data
+    assert "items" in data   
 
 
 def test_update_product(client: TestClient, owner_token: str, category_id: int):

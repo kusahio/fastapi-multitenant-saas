@@ -8,7 +8,7 @@ from app.modules.users.schemas import UserCreate, UserRead, UserUpdate
 from app.modules.users.service import UserService
 from app.modules.users.repository import UserRepository
 from app.modules.user_tenants.repository import UserTenantRepository
-from app.domain.errors.users import UserAlreadyExistError
+from app.domain.errors.users import UserAlreadyExistError, UserNotFoundError
 from app.modules.users.schemas import UserTenantResponse
 from app.modules.users.schemas import UserWithRoleRead
 
@@ -18,7 +18,6 @@ user_service = UserService(
     UserRepository(),
     UserTenantRepository()
 )
-
 
 @router.post(
     "/", response_model=UserRead,
@@ -38,16 +37,9 @@ def create_user(
     except UserAlreadyExistError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="User with this email already exists"
+            detail="Ya existe un usuario con este email"
         )
 
-
-@router.get(
-    "/", response_model=list[UserRead],
-    dependencies=[Depends(
-        RoleGuard(UserRole.PLATFORM_ADMIN, UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF))
-    ]
-)
 @router.get(
     "/",
     response_model=list[UserWithRoleRead],
@@ -87,12 +79,13 @@ def update_user(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return user_service.update_user(
-        db,
-        user_id,
-        data,
-        current_user
-    )
+    try:
+        return user_service.update_user(db, user_id, data, current_user)
+    except UserNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No se encontró el usuario"
+        )
 
 
 @router.delete(
@@ -107,11 +100,13 @@ def deactivate_user(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return user_service.deactivate_user(
-        db,
-        user_id,
-        current_user
-    )
+    try:
+        return user_service.deactivate_user(db, user_id, current_user)
+    except UserNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No se encontró el usuario"
+        )
 
 
 @router.patch(
@@ -127,8 +122,10 @@ def activate_user(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return user_service.activate_user(
-        db,
-        user_id,
-        current_user
-    )
+    try:
+        return user_service.activate_user(db, user_id, current_user)
+    except UserNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No se encontró el usuario"
+        )

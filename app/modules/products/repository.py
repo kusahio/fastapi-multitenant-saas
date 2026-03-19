@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from app.core.repositories.tenant_repository import BaseTenantRepository
 from app.modules.products.models import Product
@@ -19,7 +20,10 @@ class ProductRepository(BaseTenantRepository):
         category_id: int | None = None,
         is_active: bool | None = None
     ):
-        query = db.query(self.model).filter(self.model.tenant_id == tenant_id)
+        query = db.query(self.model).filter(
+            self.model.tenant_id == tenant_id,
+            self.model.deleted_at == None
+        )
 
         if search:
             query = query.filter(self.model.name.ilike(f"%{search}%"))
@@ -41,6 +45,7 @@ class ProductRepository(BaseTenantRepository):
             .filter(
                 self.model.tenant_id == tenant_id,
                 self.model.active == True,
+                self.model.deleted_at == None,
                 (
                     (self.model.barcode == term) | 
                     (self.model.name.ilike(f"%{term}%"))
@@ -59,8 +64,24 @@ class ProductRepository(BaseTenantRepository):
             db.query(self.model)
             .filter(
                 self.model.tenant_id == tenant_id,
-                self.model.id == product_id
+                self.model.id == product_id,
+                self.model.deleted_at == None
             )
-            .with_for_update() # <-- ¡La magia ocurre aquí!
+            .with_for_update()
             .first()
         )
+    
+    def soft_delete(self, db: Session, tenant_id: int, entity_id: int):
+        entity = (
+            db.query(self.model)
+            .filter(
+                self.model.id == entity_id,
+                self.model.tenant_id == tenant_id,
+                self.model.deleted_at == None
+            )
+            .first()
+        )
+        if entity:
+            entity.deleted_at = datetime.now(timezone.utc)
+            db.flush()
+        return entity

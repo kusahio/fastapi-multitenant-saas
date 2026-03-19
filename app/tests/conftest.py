@@ -7,6 +7,7 @@ from app.core.database import Base, get_db
 from app.main import create_app
 from app.modules.auth.utils import create_access_token
 from app.domain.enums.users_role import UserRole
+from app.domain.enums.tenant_role import TenantRole
 from app.domain.enums.business_type import BusinessType
 from app.modules.users.models import User
 from app.modules.tenants.models import Tenant
@@ -17,6 +18,9 @@ from app.modules.categories.models import Category
 from app.modules.products.models import Product
 from app.modules.orders.models import Order, OrderItem
 from app.modules.cash_shifts.models import CashShift
+
+from app.core.limiter import limiter
+from slowapi.middleware import SlowAPIMiddleware
 
 # In-memory SQLite database for testing
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -75,7 +79,9 @@ def client(db_session):
         yield db_session
 
     app.dependency_overrides[get_db] = _override_get_db
+    limiter.enabled = False
     yield TestClient(app)
+    limiter.enabled = True
     del app.dependency_overrides[get_db]
 
 
@@ -111,7 +117,7 @@ def owner_token(db_session):
     db_session.commit()
 
     user_tenant = UserTenant(
-        user_id=user.id, tenant_id=tenant.id, role=UserRole.OWNER
+        user_id=user.id, tenant_id=tenant.id, role=TenantRole.OWNER
     )
     db_session.add(user_tenant)
     db_session.commit()
@@ -138,7 +144,7 @@ def admin_token(db_session):
     db_session.commit()
 
     user_tenant = UserTenant(
-        user_id=user.id, tenant_id=tenant.id, role=UserRole.ADMIN
+        user_id=user.id, tenant_id=tenant.id, role=TenantRole.ADMIN
     )
     db_session.add(user_tenant)
     db_session.commit()
@@ -165,7 +171,7 @@ def staff_token(db_session):
     db_session.commit()
 
     user_tenant = UserTenant(
-        user_id=user.id, tenant_id=tenant.id, role=UserRole.STAFF
+        user_id=user.id, tenant_id=tenant.id, role=TenantRole.STAFF
     )
     db_session.add(user_tenant)
     db_session.commit()
@@ -193,7 +199,7 @@ def tenant_and_owner(db_session):
     db_session.commit()
 
     user_tenant = UserTenant(
-        user_id=user.id, tenant_id=tenant.id, role=UserRole.OWNER)
+        user_id=user.id, tenant_id=tenant.id, role=TenantRole.OWNER)
     db_session.add(user_tenant)
     db_session.commit()
 
@@ -218,7 +224,7 @@ def staff_in_tenant(db_session, tenant_and_owner):
     db_session.commit()
 
     user_tenant = UserTenant(user_id=staff_user.id,
-                            tenant_id=tenant.id, role=UserRole.STAFF)
+                            tenant_id=tenant.id, role=TenantRole.STAFF)
     db_session.add(user_tenant)
     db_session.commit()
 

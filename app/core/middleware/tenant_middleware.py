@@ -22,7 +22,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 payload = None
 
             if payload:
-                request.state.user_id = payload.get("user_id")
+                request.state.user_id = payload.get("sub")
                 request.state.tenant_id = payload.get("tenant_id")
                 request.state.role = payload.get("role")
             else:

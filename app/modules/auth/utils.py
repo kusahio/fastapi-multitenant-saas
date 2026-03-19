@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from app.core.settings import settings
 
-def create_access_token(data: dict, expires_delta: int = 60 * 4):
+def create_access_token(data: dict, expires_delta: int = settings.access_token_expire_minutes):
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=expires_delta)
     to_encode.update({"exp": expire})
@@ -14,6 +14,12 @@ def create_access_token(data: dict, expires_delta: int = 60 * 4):
     )
 
     return encoded_jwt
+
+def create_refresh_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 def decode_token(token: str) -> dict | None:
     try:
