@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.modules.categories.repository import CategoryRepository
 from app.modules.categories.schemas import CategoryCreate, CategoryUpdate
 from app.modules.categories.models import Category
-from fastapi import HTTPException, status
-from sqlalchemy.exc import IntegrityError
+from app.domain.errors.categories import CategoryNotFoundError, CategoryHasProductsError
 
 
 class CategoryService:
@@ -33,10 +33,7 @@ class CategoryService:
     def get_by_id(self, db: Session, category_id: int, tenant_id: int):
         category = self.repository.get_by_id(db, tenant_id, category_id)
         if not category or category.deleted_at is not None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, 
-                detail="No se encontró la categoría"
-            )
+            raise CategoryNotFoundError()
         return category
 
     def update(self, db: Session, category_id: int, data: CategoryUpdate, tenant_id: int):
@@ -54,20 +51,14 @@ class CategoryService:
                 db, tenant_id, category_id)
 
             if not deleted_category:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="No se encontró la categoría"
-                )
+                raise CategoryNotFoundError()
 
             db.commit()
             return deleted_category
 
         except IntegrityError:
             db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No se puede eliminar la categoría porque tiene productos agotados"
-            )
+            raise CategoryHasProductsError()
 
     def deactivate(self, db: Session, category_id: int, tenant_id: int):
         return self._change_status(db, category_id, tenant_id, False)
@@ -82,7 +73,6 @@ class CategoryService:
         total, items = self.repository.get_paginated(
             db, tenant_id, skip, limit, search, is_active
         )
-        
         return {
             "total": total,
             "items": items

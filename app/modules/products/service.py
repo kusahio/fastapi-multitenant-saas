@@ -3,6 +3,7 @@ from fastapi import HTTPException, status
 from app.modules.products.repository import ProductRepository
 from app.modules.products.schemas import ProductCreate, ProductUpdate
 from app.modules.products.models import Product
+from app.domain.errors.products import ProductNotFoundError, ProductBarcodeAlreadyExistsError
 
 class ProductService:
     def __init__(self):
@@ -22,10 +23,7 @@ class ProductService:
                 Product.barcode == data.barcode
             ).first()
             if existing:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Ya existe un producto con este código de barras en tu tienda."
-                )
+                raise ProductBarcodeAlreadyExistsError()
 
         product = Product(**data.model_dump(), tenant_id=tenant_id)
         self.repository.save(db, product)
@@ -49,9 +47,8 @@ class ProductService:
 
     def get_by_id(self, db: Session, product_id: int, tenant_id: int):
         product = self.repository.get_by_id(db, tenant_id, product_id)
-        if not product:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Producto no encontrado")
+        if not product or product.deleted_at is not None:
+            raise ProductNotFoundError()
         return product
 
     def update(self, db: Session, product_id: int, data: ProductUpdate, tenant_id: int):
@@ -65,8 +62,7 @@ class ProductService:
                 Product.id != product_id
             ).first()
             if existing:
-                raise HTTPException(
-                    status_code=400, detail="El código de barras ya está en uso.")
+                raise ProductBarcodeAlreadyExistsError()
 
         for key, value in update_data.items():
             setattr(product, key, value)
@@ -78,10 +74,7 @@ class ProductService:
     def delete(self, db: Session, product_id: int, tenant_id: int):
         deleted_product = self.repository.soft_delete(db, tenant_id, product_id)
         if not deleted_product:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, 
-                detail="Producto no encontrado"
-            )
+            raise ProductNotFoundError()
         db.commit()
         return deleted_product
     

@@ -7,6 +7,7 @@ from app.modules.cash_shifts.repository import CashShiftRepository
 from app.modules.orders.models import Order
 from app.modules.cash_shifts.models import CashShift, CashShiftStatus
 from app.modules.cash_shifts.schemas import CashShiftOpen, CashShiftClose
+from app.domain.errors.cash_shifts import ShiftAlreadyOpenError, NoOpenShiftError
 
 class CashShiftService:
     def __init__(self):
@@ -14,7 +15,7 @@ class CashShiftService:
 
     def open_shift(self, db: Session, tenant_id: int, user_id: int, data: CashShiftOpen):
         if self.repository.get_active_shift(db, tenant_id, user_id):
-            raise HTTPException(status_code=400, detail="Ya tienes una caja abierta.")
+            raise ShiftAlreadyOpenError()
         
         shift = CashShift(
             tenant_id=tenant_id,
@@ -29,7 +30,7 @@ class CashShiftService:
     def close_shift(self, db: Session, tenant_id: int, user_id: int, data: CashShiftClose):
         shift = self.repository.get_active_shift(db, tenant_id, user_id)
         if not shift:
-            raise HTTPException(status_code=404, detail="No tienes ninguna caja abierta.")
+            raise NoOpenShiftError()
 
         total_sales = db.query(func.sum(Order.total)).filter(
             Order.cash_shift_id == shift.id,
@@ -49,8 +50,5 @@ class CashShiftService:
     def get_active_shift_or_404(self, db: Session, tenant_id: int, user_id: int):
         shift = self.repository.get_active_shift(db, tenant_id, user_id)
         if not shift:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No tienes una caja abierta actualmente."
-            )
+            raise NoOpenShiftError()
         return shift
