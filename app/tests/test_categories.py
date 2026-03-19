@@ -53,6 +53,8 @@ def test_list_categories(client: TestClient, owner_token: str):
 def test_list_categories_staff_allowed(client: TestClient, staff_token: str):
     response = client.get("/categories/", headers={"Authorization": f"Bearer {staff_token}"})
     assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
 
 def test_update_category(client: TestClient, owner_token: str):
     create_resp = client.post(
