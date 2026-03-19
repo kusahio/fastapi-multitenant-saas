@@ -8,6 +8,7 @@ from app.modules.tenants.models import Tenant
 from app.modules.users.models import User
 from app.modules.user_tenants.models import UserTenant
 from app.domain.enums.users_role import UserRole
+from app.domain.enums.tenant_role import TenantRole
 from app.domain.errors.tenant import TenantAlreadyExistsError, TenantNotFoundError
 from app.core.security import hashed_password
 
@@ -55,7 +56,7 @@ class TenantService:
             user_tenant = UserTenant(
                 user_id=owner.id,
                 tenant_id=tenant.id,
-                role=UserRole.OWNER
+                role=TenantRole.OWNER
             )
 
             self.user_tenant_repository.save(db, user_tenant)

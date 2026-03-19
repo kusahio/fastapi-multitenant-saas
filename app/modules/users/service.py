@@ -6,6 +6,7 @@ from app.modules.users.schemas import UserCreate, UserUpdate
 from app.modules.users.models import User
 from app.modules.user_tenants.models import UserTenant
 from app.domain.enums.users_role import UserRole
+from app.domain.enums.tenant_role import TenantRole
 from app.domain.errors.users import UserAlreadyExistError, UserNotFoundError, InsufficientPermissionsError
 from app.core.security import hashed_password
 
@@ -18,19 +19,19 @@ class UserService:
         self.user_repository = user_repository
         self.user_tenant_repository = user_tenant_repository
 
-    def _validate_role_creation(self, current_user, new_role: UserRole):
+    def _validate_role_creation(self, current_user, new_role: TenantRole):
         role = current_user.get("role")
 
         if role == UserRole.PLATFORM_ADMIN:
             return
 
         if role == UserRole.OWNER:
-            if new_role in (UserRole.ADMIN, UserRole.STAFF):
+            if new_role in (TenantRole.ADMIN, TenantRole.STAFF):
                 return
             raise InsufficientPermissionsError()
 
         if role == UserRole.ADMIN:
-            if new_role == UserRole.STAFF:
+            if new_role == TenantRole.STAFF:
                 return
             raise InsufficientPermissionsError()
 
@@ -43,12 +44,12 @@ class UserService:
             return
 
         if role == UserRole.OWNER:
-            if target_role in (UserRole.ADMIN, UserRole.STAFF):
+            if target_role in (TenantRole.ADMIN, TenantRole.STAFF):
                 return
             raise InsufficientPermissionsError()
 
         if role == UserRole.ADMIN:
-            if target_role == UserRole.STAFF:
+            if target_role == TenantRole.STAFF:
                 return
             raise InsufficientPermissionsError()
 
