@@ -7,7 +7,8 @@ from app.modules.auth.service import AuthService
 from app.modules.auth.schemas import (
     LoginResponse,
     SelectTenantRequest,
-    TokenResponse
+    TokenResponse,
+    RefreshRequest
 )
 from app.modules.tenants.models import Tenant
 from app.core.dependencies import get_current_user
@@ -61,3 +62,7 @@ def get_me(current_user=Depends(get_current_user), db: Session = Depends(get_db)
         }
 
     return user_context
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh_token(data: RefreshRequest):
+    return auth_service.refresh_access_token(data.refresh_token)

@@ -3,7 +3,7 @@ from app.modules.users.repository import UserRepository
 from app.modules.user_tenants.repository import UserTenantRepository
 from app.core.security import verify_password
 from app.domain.errors.users import InvalidCredentialsError
-from app.modules.auth.utils import create_access_token
+from app.modules.auth.utils import create_access_token, create_refresh_token, decode_token
 from app.domain.enums.users_role import UserRole
 
 class AuthService:
@@ -24,15 +24,20 @@ class AuthService:
             raise InvalidCredentialsError()
 
         if user.is_platform_admin:
-            token = create_access_token({
-                "sub": str(user.id),
-                "role": UserRole.PLATFORM_ADMIN.value,
+            access = create_access_token({
+                "sub": str(user.id), 
+                "role": UserRole.PLATFORM_ADMIN.value
+            })
+            refresh = create_refresh_token({
+                "sub": str(user.id), 
+                "role": UserRole.PLATFORM_ADMIN.value
             })
             return {
-                "user_id": user.id,
-                "name": user.name,
+                "user_id": user.id, 
+                "name": user.name, 
                 "tenants": [],
-                "access_token": token
+                "access_token": access, 
+                "refresh_token": refresh
             }
 
         user_tenants = self.user_tenant_repository.get_by_user_id(
@@ -50,15 +55,14 @@ class AuthService:
                 "role": user_tenant.role.value
             })
 
-        token = create_access_token({
-            "sub": str(user.id)
-        })
-
+        access = create_access_token({"sub": str(user.id)})
+        refresh = create_refresh_token({"sub": str(user.id)})
         return {
-            "user_id": user.id,
-            "name": user.name,
+            "user_id": user.id, 
+            "name": user.name, 
             "tenants": tenants,
-            "access_token": token
+            "access_token": access, 
+            "refresh_token": refresh
         }
 
     def select_tenant(self, db: Session, user_id: int, tenant_id: int):
@@ -67,12 +71,25 @@ class AuthService:
         if not user_tenant:
             raise InvalidCredentialsError()
 
-        token = create_access_token({
-            "sub": str(user_id),
-            "tenant_id": tenant_id,
+        payload = {
+            "sub": str(user_id), 
+            "tenant_id": tenant_id, 
             "role": user_tenant.role.value
-        })
+        }
 
         return {
-            "access_token": token
+            "access_token": create_access_token(payload),
+            "refresh_token": create_refresh_token(payload),
+        }
+    
+    def refresh_access_token(self, db, refresh_token: str):
+        payload = decode_token(refresh_token)
+        if not payload or payload.get("type") != "refresh":
+            raise InvalidCredentialsError()
+        
+        new_payload = { k: v for k, v in payload.items() if k not in ("exp", "type")}
+
+        return {
+            "access_token": create_access_token(new_payload),
+            "refresh_token": create_refresh_token(new_payload),
         }
