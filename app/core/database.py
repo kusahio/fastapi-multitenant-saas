@@ -1,6 +1,6 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase  # declarative_base
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from app.core.settings import settings
 from urllib.parse import quote_plus
 
@@ -18,7 +18,6 @@ class Base(DeclarativeBase):
 
 def get_db():
     db = SessionLocal()
-
     try:
         yield db
     finally:
