@@ -16,10 +16,11 @@ from app.modules.orders.router import router as orders_router
 from app.modules.cash_shifts.router import router as cash_shifts_router
 from app.domain.errors.users import InvalidCredentialsError
 
+
 def create_app() -> FastAPI:
 
     app = FastAPI(
-        title="SaaS API",
+        title="SasS API",
         version="1.0.0"
     )
 
