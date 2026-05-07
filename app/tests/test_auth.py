@@ -29,7 +29,7 @@ def _create_user_with_tenant(db_session):
 
 
 def test_login_success_regular_user(client: TestClient, db_session):
-    email, password, tenant_id = _create_user_with_tenant(db_session)
+    email, password, _ = _create_user_with_tenant(db_session)
     response = client.post("/auth/login", data={"username": email, "password": password})
     assert response.status_code == 200
     data = response.json()
