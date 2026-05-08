@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -21,7 +22,7 @@ class SelectTenantRequest(BaseModel):
     tenant_id: int
 
 class RefreshRequest(BaseModel):
-    refresh_token: str
+    refresh_token: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str
