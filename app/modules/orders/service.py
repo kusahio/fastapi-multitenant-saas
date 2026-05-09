@@ -74,6 +74,9 @@ class OrderService:
             order_item = OrderItem(
                 product_id=product.id,
                 product_name=product.name,
+                product_sku=getattr(product, 'barcode', None),
+                product_barcode=product.barcode,
+                category_name=product.category.name if product.category else None,
                 quantity=item.quantity,
                 unit_price=unit_price,
                 discount=final_discount,

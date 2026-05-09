@@ -19,3 +19,6 @@ class InsufficientPermissionsError(HTTPException):
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Permisos insuficientes'
         )
+
+class UserHasOpenShiftError(Exception):
+    pass

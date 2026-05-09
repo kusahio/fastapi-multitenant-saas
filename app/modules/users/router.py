@@ -8,6 +8,8 @@ from app.modules.users.schemas import UserCreate, UserRead, UserUpdate
 from app.modules.users.service import UserService
 from app.modules.users.repository import UserRepository
 from app.modules.user_tenants.repository import UserTenantRepository
+from app.modules.cash_shifts.repository import CashShiftRepository
+from domain.errors.users import UserAlreadyExistError, UserNotFoundError, UserHasOpenShiftError
 from app.domain.errors.users import UserAlreadyExistError, UserNotFoundError
 from app.modules.users.schemas import UserTenantResponse
 from app.modules.users.schemas import UserWithRoleRead
@@ -16,7 +18,8 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 user_service = UserService(
     UserRepository(),
-    UserTenantRepository()
+    UserTenantRepository(),
+    CashShiftRepository()
 )
 
 @router.post(
@@ -106,6 +109,12 @@ def deactivate_user(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No se encontró el usuario"
+        )
+    
+    except UserHasOpenShiftError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El usuario tiene una caja abierta. Debe cerrarla antes de desactivar."
         )
 
 

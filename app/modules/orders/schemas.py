@@ -16,6 +16,9 @@ class OrderItemRead(BaseModel):
     id: int
     product_id: int | None
     product_name: str
+    product_sku: str | None
+    product_barcode: str | None
+    category_name: str | None
     quantity: Decimal
     unit_price: Decimal
     discount: Decimal
