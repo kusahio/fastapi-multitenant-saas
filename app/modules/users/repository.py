@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from app.modules.users.models import User
 from app.modules.user_tenants.models import UserTenant
@@ -36,7 +37,10 @@ class UserRepository:
         results = (
             db.query(User, UserTenant.role)
             .join(UserTenant, User.id == UserTenant.user_id)
-            .filter(UserTenant.tenant_id == tenant_id)
+            .filter(
+                UserTenant.tenant_id == tenant_id,
+                User.deleted_at == None
+            )
             .offset(skip)
             .limit(limit)
             .all()
@@ -50,3 +54,11 @@ class UserRepository:
             users_with_roles.append(user_data)
 
         return users_with_roles
+    
+    def soft_delete(self, db: Session, user_id: int) -> User | None:
+        user = self.get_by_id(db, user_id)
+        if user:
+            user.deleted_at = datetime.now(timezone.utc)
+            user.active = False
+            db.flush()
+        return user

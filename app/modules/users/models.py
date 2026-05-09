@@ -12,6 +12,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     active = Column(Boolean, default=True, nullable=False)
     is_platform_admin = Column(Boolean, default=False, nullable=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     created_at = Column(
         DateTime(timezone=True), 
@@ -19,4 +20,4 @@ class User(Base):
         server_default=func.now()
     )
     
-    tenants = relationship("UserTenant", back_populates="user", cascade="all, delete-orphan")
+    tenants = relationship("UserTenant", back_populates="user")

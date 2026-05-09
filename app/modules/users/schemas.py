@@ -16,6 +16,7 @@ class UserRead(UserBase):
     id: int
     active: bool
     created_at: datetime
+    deleted_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
