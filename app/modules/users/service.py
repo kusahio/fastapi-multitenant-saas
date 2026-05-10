@@ -7,17 +7,25 @@ from app.modules.users.models import User
 from app.modules.user_tenants.models import UserTenant
 from app.domain.enums.users_role import UserRole
 from app.domain.enums.tenant_role import TenantRole
-from app.domain.errors.users import UserAlreadyExistError, UserNotFoundError, InsufficientPermissionsError
+from app.domain.errors.users import (
+    UserAlreadyExistError,
+    UserNotFoundError,
+    InsufficientPermissionsError,
+    UserHasOpenShiftError
+)
 from app.core.security import hashed_password
+from app.modules.cash_shifts.repository import CashShiftRepository
 
 class UserService:
     def __init__(
         self,
         user_repository: UserRepository,
-        user_tenant_repository: UserTenantRepository
+        user_tenant_repository: UserTenantRepository,
+        cash_shift_repository: CashShiftRepository
     ):
         self.user_repository = user_repository
         self.user_tenant_repository = user_tenant_repository
+        self.cash_shift_repository = cash_shift_repository
 
     def _validate_role_creation(self, current_user, new_role: TenantRole):
         role = current_user.get("role")
@@ -54,12 +62,22 @@ class UserService:
             raise InsufficientPermissionsError()
 
         raise InsufficientPermissionsError()
+
+    def _check_user_has_open_shift(self, db: Session, user_id: int, tenant_id: int):
+        active_shift = self.cash_shift_repository.get_active_shift(db, tenant_id, user_id)
+        if active_shift:
+            raise UserHasOpenShiftError()
     
     def _change_user_status(self, db: Session, user_id: int, current_user, new_status: bool):
         if current_user.get("role") == UserRole.PLATFORM_ADMIN:
             user = self.user_repository.get_by_id(db, user_id)
             if not user:
                 raise UserNotFoundError()
+            
+            if not new_status and user.deleted_at is None:
+                user_tenants = self.user_tenant_repository.get_by_user_id(db, user_id)
+                for ut in user_tenants:
+                    self._check_user_has_open_shift(db, user_id, ut.tenant_id)
             
             user.active = new_status
             db.commit()
@@ -72,6 +90,9 @@ class UserService:
 
         if not user_tenant:
             raise UserNotFoundError()
+        
+        if not new_status and user_tenant.user.deleted_at is None:
+            self._check_user_has_open_shift(db, user_id, tenant_id)
 
         self._validate_user_management_permissions(
             current_user, user_tenant.role
@@ -179,10 +200,46 @@ class UserService:
             raise ValueError("Actualización fallida")
 
     def deactivate_user(self, db: Session, user_id: int, current_user):
-        return self._change_user_status(db, user_id, current_user, new_status=False)
+        self._change_user_status(db, user_id, current_user, new_status=False)
+
+        user = self.user_repository.soft_delete(db, user_id)
+        if not user:
+            raise UserNotFoundError()
+
+        db.commit()
+        return user
 
     def activate_user(self, db: Session, user_id: int, current_user):
-        return self._change_user_status(db, user_id, current_user, new_status=True)
+        if current_user.get("role") == UserRole.PLATFORM_ADMIN:
+            user = self.user_repository.get_by_id(db, user_id)
+            if not user:
+                raise UserNotFoundError()
+
+            user.active = True
+            user.deleted_at = None
+            db.commit()
+            return user
+
+        tenant_id = current_user.get("tenant_id")
+        user_tenant = self.user_tenant_repository.get_user_tenant(
+            db, user_id, tenant_id
+        )
+
+        if not user_tenant:
+            raise UserNotFoundError()
+
+        self._validate_user_management_permissions(
+            current_user, user_tenant.role
+        )
+
+        try:
+            user_tenant.user.active = True
+            user_tenant.user.deleted_at = None
+            db.commit()
+            return user_tenant.user
+        except Exception:
+            db.rollback()
+            raise
     
     def get_user_tenants(self, db: Session, user_id: int):
         user_tenants = self.user_tenant_repository.get_by_user_id(db, user_id)
