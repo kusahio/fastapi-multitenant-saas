@@ -9,8 +9,7 @@ from app.modules.users.service import UserService
 from app.modules.users.repository import UserRepository
 from app.modules.user_tenants.repository import UserTenantRepository
 from app.modules.cash_shifts.repository import CashShiftRepository
-from domain.errors.users import UserAlreadyExistError, UserNotFoundError, UserHasOpenShiftError
-from app.domain.errors.users import UserAlreadyExistError, UserNotFoundError
+from app.domain.errors.users import UserAlreadyExistError, UserNotFoundError, UserHasOpenShiftError
 from app.modules.users.schemas import UserTenantResponse
 from app.modules.users.schemas import UserWithRoleRead
 
