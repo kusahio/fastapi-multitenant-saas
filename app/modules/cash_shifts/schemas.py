@@ -15,11 +15,11 @@ class CashShiftRead(BaseModel):
     id: int
     user_id: int
     opening_balance: Decimal
-    closing_balance: Optional[Decimal]
-    expected_balance: Optional[Decimal]
+    closing_balance: Optional[Decimal] = None
+    expected_balance: Optional[Decimal] = None
     status: CashShiftStatus
     opened_at: datetime
-    closed_at: Optional[datetime]
-    observations: Optional[str]
+    closed_at: Optional[datetime] = None
+    observations: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
