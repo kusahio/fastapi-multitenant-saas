@@ -929,5 +929,3 @@ Funcionalidades que podrían agregarse al proyecto para expandir su alcance:
 Proyecto personal de práctica — uso educativo y de referencia. Sin licencia formal.
 
 ---
-
-*Documentación generada para entender, mantener y expandir este proyecto SaaS multi-tenant.*
