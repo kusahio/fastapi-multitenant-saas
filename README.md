@@ -1,9 +1,71 @@
 # FastAPI Multi-Tenant SaaS
 
-**Proyecto personal de práctica — Sistema SaaS multiinquilino para gestión de comercios (POS / Punto de Venta).**
+**Proyecto personal enfocado en explorar arquitectura backend, diseño de aplicaciones SaaS y buenas prácticas de desarrollo.**
 
-Backend construido con **FastAPI**, **SQLAlchemy 2.0**, **PostgreSQL**, **Alembic**, **JWT** y **pytest**.  
-Implementa arquitectura modular, multi-tenancy a nivel aplicación, RBAC dual (plataforma + tenant), autenticación JWT con selección de tenant post-login, y funcionalidades completas de punto de venta: productos, categorías, órdenes, turnos de caja, descuentos y métricas.
+El proyecto toma como caso de estudio un sistema POS multi-tenant para experimentar con modelado de datos, autenticación, autorización y organización de aplicaciones backend escalables.
+
+Su objetivo principal no es replicar un sistema POS comercial ni aprender un framework en particular, sino utilizar un dominio de negocio real para experimentar con decisiones de arquitectura y comprender cómo diseñar aplicaciones backend que puedan evolucionar de forma ordenada a medida que aumentan su complejidad.
+
+Cada nueva funcionalidad se incorpora únicamente cuando permite explorar un nuevo concepto técnico o validar una decisión de diseño.
+
+Actualmente utiliza **FastAPI**, **SQLAlchemy 2.0**, **PostgreSQL**, **Alembic**, **JWT** y **pytest**.
+
+Implementa una arquitectura modular con soporte para multi-tenancy a nivel aplicación, RBAC dual (plataforma y tenant) y autenticación JWT con selección de tenant posterior al inicio de sesión.
+
+Como dominio de negocio incorpora funcionalidades propias de un sistema POS, incluyendo productos, categorías, órdenes, turnos de caja, descuentos y métricas.
+
+---
+
+## ¿Por qué existe este proyecto?
+
+Este proyecto nace para profundizar en conceptos de arquitectura backend que difícilmente se pueden explorar en aplicaciones pequeñas.
+
+**Más que implementar funcionalidades, el objetivo fue entender cómo las decisiones de diseño influyen en la mantenibilidad, escalabilidad y evolución de una aplicación backend.**
+
+Los principales objetivos fueron:
+
+- Diseñar una arquitectura preparada para crecer de forma incremental, incorporando nuevas funcionalidades sin comprometer la mantenibilidad del sistema.
+- Aprender a diseñar una arquitectura basada en separación de responsabilidades, desacoplando lógica de negocio, acceso a datos y capa de presentación.
+- Diseñar una organización modular del código que facilite el mantenimiento y la incorporación de nuevos dominios de negocio.
+- Explorar patrones utilizados en aplicaciones SaaS multi-tenant.
+- Profundizar en el uso de ORMs (SQLAlchemy) para modelar entidades, gestionar relaciones y simplificar el acceso a datos mediante consultas parametrizadas.
+- Gestionar la evolución del esquema de base de datos mediante migraciones versionadas con Alembic.
+- Diseñar e implementar mecanismos de autenticación, autorización y control de acceso utilizando JWT y RBAC.
+
+El proyecto continúa evolucionando como un espacio para validar nuevas decisiones de diseño, incorporar funcionalidades y seguir profundizando en conceptos de arquitectura e ingeniería de software.
+
+---
+
+## Preguntas que buscaba responder
+
+Durante el desarrollo del proyecto me propuse responder preguntas como:
+
+- ¿Cómo organizar un backend para que sea fácil de mantener a medida que crece?
+- ¿Cuándo conviene utilizar un ORM y cuándo SQL nativo?
+- ¿Cómo modelar relaciones complejas sin aumentar el acoplamiento entre entidades?
+- ¿Cómo mantener bajo el acoplamiento entre módulos a medida que crece la aplicación?
+- ¿Qué responsabilidades deberían pertenecer al dominio y cuáles a la infraestructura?
+- ¿Cómo estructurar un proyecto para facilitar su evolución y mantenimiento a largo plazo?
+
+---
+
+## Enfoque del proyecto
+
+Aunque el dominio funcional elegido es un sistema POS, el foco principal del proyecto está en la arquitectura backend y no en la implementación de funcionalidades específicas.
+
+Cada nueva funcionalidad se incorpora únicamente cuando permite explorar un nuevo concepto técnico, validar una decisión de diseño o mejorar la arquitectura existente.
+
+---
+
+## Principios del proyecto
+
+Durante el desarrollo intento mantener algunas decisiones constantes:
+
+- Favorecer soluciones simples antes que abstracciones innecesarias.
+- Favorecer código legible antes que soluciones complejas.
+- Separar responsabilidades para reducir el acoplamiento.
+- Priorizar mantenibilidad sobre optimizaciones prematuras.
+- Incorporar nuevas tecnologías únicamente cuando aportan una mejora real al diseño.
 
 ---
 
@@ -139,11 +201,6 @@ fastapi-multitenant-saas/
 │   ├── env.py                            # Configuración de Alembic (importa todos los modelos)
 │   ├── script.py.mako                    # Template para nuevas migraciones
 │   └── versions/                         # Migraciones versionadas
-│       ├── 16e2cdcfea3f_create_tenants_table.py
-│       ├── 2f24a7a15039_add_complete_discount_logic_to_products_.py
-│       ├── 32f2445c0056_add_payment_type_to_orders.py
-│       ├── f4ce807585f3_add_cash_shift_id_to_orders.py
-│       └── 24932b4da6ab_add_product_name_to_order_items.py
 │
 ├── pytest.ini                            # Configuración de pytest
 ├── requirements.txt                      # Dependencias del proyecto
@@ -166,7 +223,9 @@ Todas las tablas de negocio residen en el mismo esquema y la separación se logr
 - Facil de testear (una sola base de datos)
 - Portable entre motores de base de datos
 - Consultas cross-tenant para el admin de plataforma
-- <span style="color:red">🗙</span> Riesgo de fuga de datos si un desarrollador olvida filtrar por `tenant_id`
+
+**Riesgos:**
+- Riesgo de fuga de datos si un desarrollador olvida filtrar por `tenant_id`
 
 **Mitigación:** El `BaseTenantRepository` fuerza el filtro por `tenant_id` en todos los métodos CRUD base. Cada servicio debe pasar explícitamente el `tenant_id` obtenido del JWT.
 
@@ -845,6 +904,18 @@ En servicios con múltiples operaciones (crear orden, crear tenant con owner), s
 
 ---
 
+## Aprendizajes obtenidos
+
+El desarrollo del proyecto me permitió profundizar especialmente en:
+
+- Diseño de arquitecturas backend preparadas para crecer de forma incremental.
+- Modelado de entidades y relaciones utilizando SQLAlchemy.
+- Organización del código mediante separación de responsabilidades y arquitectura por capas.
+- Gestión de la evolución del esquema de base de datos con Alembic.
+- Diseño de APIs desacopladas, mantenibles y fáciles de extender.
+
+---
+
 ## Futuras Mejoras
 
 Secciones de mejora identificadas durante el desarrollo del proyecto:
@@ -926,6 +997,6 @@ Funcionalidades que podrían agregarse al proyecto para expandir su alcance:
 
 ## Licencia
 
-Proyecto personal de práctica — uso educativo y de referencia. Sin licencia formal.
+Proyecto personal desarrollado con fines de aprendizaje, experimentación y referencia.
 
----
+Actualmente no cuenta con una licencia de código abierto específica.
